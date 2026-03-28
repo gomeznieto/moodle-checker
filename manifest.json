@@ -1,0 +1,20 @@
+
+{
+    "manifest_version": 3,
+    "name": "Moodle Dashboard Hook",
+    "version": "1.0",
+    "description": "Primer paso para nuestro dashboard de docentes",
+    "permissions": ["alarms", "notifications", "storage", "offscreen"],
+    "background": {
+        "service_worker": "background.js"
+    },
+    "content_scripts": [
+        {
+            "matches": ["https://frgp.cvg.utn.edu.ar/*"], 
+            "js": ["content.js"]
+        }
+    ],
+    "action": {
+        "default_popup": "dashboard/dashboard.html"
+    }
+}

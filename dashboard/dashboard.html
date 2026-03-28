@@ -1,0 +1,47 @@
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title></title>
+        <link rel="stylesheet" href="dashboard.css">
+    </head>
+    <body>
+        <h2>configuración</h2>
+        <form id="form_setting">
+            <div class="form-content">
+                <label  id="url">url base</label>
+                <input name="domain" id=="url"/>
+            </div>
+
+            <div class="form-content">
+                <label id="interval">Intervalo</label>
+                <input name="timeInterval" id=="interval"/>
+            </div>
+            <button type="submit" btn_setting">Guardar</button>
+        </form>
+        <h2>Ingresar nueva aula</h2>
+        <form id="form-classroom">
+            <div class="form-content">
+                <label id="url">url base</label>
+                <input id=="url"/>
+            </div>
+            <div class="form-content">
+                <label id="classRoomName">Nombre</label>
+                <input id=="classRoomName"/>
+            </div>
+            <div class="form-content">
+                <label id="classRoomCode">Código del aula</label>
+                <input id=="classRoomCode"/>
+            </div>
+            <div class="form-content">
+                <label id="classRoomSection">Seccion</label>
+                <input id=="classRoomSection"/>
+            </div>
+            <button id="btn_classRoom">Guardar</button>
+        </form>
+        <h1>Dashboard</h1>
+        <div id="moodle-data"></div>
+
+        <script src="dashboard.js"></script>
+    </body>
+</html>
