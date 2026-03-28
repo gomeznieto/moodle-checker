@@ -1,14 +1,10 @@
 // VARIABLES DESDE EL CONTENT
-const AULA = "6589";
-const URL_BASE = "https://frgp.cvg.utn.edu.ar";
-const URL_CLASS= `${URL_BASE}/course/view.php?id=`
-const SECTION = "0";
-const URL = `${URL_CLASS}${AULA}&section=${SECTION}#tabs-tree-start` //Aseguramos que empiece en la seccion que necesitamos
+// const URL_CLASS= `${URL_BASE}`
+// const URL = `${URL_CLASS}${AULA}&section=${SECTION}#tabs-tree-start` //Aseguramos que empiece en la seccion que necesitamos
 const BLACK_LIST=[]
-const NAME = "Programación 1 - TM";
-const TIME = 15;
 
 chrome.runtime.onInstalled.addListener(async () => {
+    console.log("Iniciando");
     const { config } = await chrome.storage.local.get(["config"]);
 
     const defaultConfig = {
@@ -21,17 +17,24 @@ chrome.runtime.onInstalled.addListener(async () => {
         await chrome.storage.local.set({ config: defaultConfig });
     }
 
-    console.log("Iniciando");
     const interval = config?.checkInterval || defaultConfig.checkInterval;
     await chrome.alarms.create("checkMoodle", { periodInMinutes: interval });
-    console.log(interval)
-    await processMoodle(AULA, NAME, SECTION, URL);
+    
 });
 
 chrome.alarms.onAlarm.addListener(async (alarm) => {
     if(alarm.name == "checkMoodle"){
         try {
-            await processMoodle(AULA, NAME, SECTION, URL);
+            const { config } = await chrome.storage.local.get(["config"]);
+
+            for (const [code, c] of Object.entries(config.classRoom || {})) {
+                const name = c.name;
+                const section = c.section;
+                const domain = c.domainOptional;
+                const url = `${domain}/course/view.php?id=${code}&section=${section}#tabs-tree-start`
+
+                await processMoodle(code, name, section, url);
+            }
         } catch (error) {
             console.log("Fallo: ", error)
         }
@@ -229,3 +232,21 @@ const parserOffscreen = async (object) => {
 
     return result;
 }
+
+chrome.runtime.onMessage.addListener( async (request, sender, sendResponse) => {
+    console.log("Revisar ahora")
+    if (request.action === "check_now") {
+
+        const { config } = await chrome.storage.local.get(["config"]);
+        for (const [code, c] of Object.entries(config.classRoom || {})) {
+            const name = c.name;
+            const section = c.section;
+            const domain = c.domainOptional;
+            const url = `${domain}/course/view.php?id=${code}&section=${c.section}#tabs-tree-start`
+
+            console.log({name, section, url, code})
+            await processMoodle(code, name, section, url);
+        }
+    }
+    return true; // Necesario si vas a usar await o lógica asíncrona dentro del listener
+});

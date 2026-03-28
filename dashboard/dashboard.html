@@ -6,41 +6,60 @@
         <link rel="stylesheet" href="dashboard.css">
     </head>
     <body>
-        <h2>configuración</h2>
-        <form id="form_setting">
-            <div class="form-content">
-                <label  id="url">url base</label>
-                <input name="domain" id=="url"/>
-            </div>
+        <nav class="tabs-menu">
+            <button class="tab-btn active" data-target="view-data">Dashboard</button>
+            <button class="tab-btn" data-target="view-settings">Configuración</button>
+            <button class="tab-btn" data-target="view-addClassRooms">Agregar Aula</button>
+        </nav>
+        <hr>
+        <section id="view-settings" class="tab-content" style="display: none;">
+            <h2>configuración</h2>
+            <form id="form_setting">
+                <div class="form-content">
+                    <label  id="url">url base</label>
+                    <input name="domain" id=="url"/>
+                </div>
 
-            <div class="form-content">
-                <label id="interval">Intervalo</label>
-                <input name="timeInterval" id=="interval"/>
+                <div class="form-content">
+                    <label id="interval">Intervalo</label>
+                    <input name="timeInterval" id=="interval"/>
+                </div>
+                <button type="submit" btn_setting">Guardar</button>
+            </form>
+        </section>
+
+        <section id="view-addClassRooms" class="tab-content" style="display: none;">
+            <h2>Ingresar nueva aula</h2>
+            <div id="alert" class=""></div>
+            <form id="form-classroom">
+                <div class="form-content">
+                    <label id="classRoomName">Nombre</label>
+                    <input name="name" id=="classRoomName"/>
+                </div>
+                <div class="form-content">
+                    <label id="classRoomCode">Código del aula</label>
+                    <input name="code" id=="classRoomCode"/>
+                </div>
+                <div class="form-content">
+                    <label id="classRoomSection">Seccion</label>
+                    <input name="section" id=="classRoomSection"/>
+                </div>
+                <div class="form-content">
+                    <label id="url">url base</label>
+                    <input name="domain" id=="url"/>
+                </div>
+                <button id="btn_classRoom">Guardar</button>
+            </form>
+        </section>
+
+        <section id="view-data" class="tab-content">
+            <h1>Dashboard</h1>
+            <div id="check-now-btn" class="btn">Revisar ahora</div>
+            <div id="intervaleTime">
+                <p>Tiempo de Intervalo: <span id="intervaleTimeMinutes"></span></p>
             </div>
-            <button type="submit" btn_setting">Guardar</button>
-        </form>
-        <h2>Ingresar nueva aula</h2>
-        <form id="form-classroom">
-            <div class="form-content">
-                <label id="url">url base</label>
-                <input id=="url"/>
-            </div>
-            <div class="form-content">
-                <label id="classRoomName">Nombre</label>
-                <input id=="classRoomName"/>
-            </div>
-            <div class="form-content">
-                <label id="classRoomCode">Código del aula</label>
-                <input id=="classRoomCode"/>
-            </div>
-            <div class="form-content">
-                <label id="classRoomSection">Seccion</label>
-                <input id=="classRoomSection"/>
-            </div>
-            <button id="btn_classRoom">Guardar</button>
-        </form>
-        <h1>Dashboard</h1>
-        <div id="moodle-data"></div>
+            <div id="moodle-data"></div>
+        </section>
 
         <script src="dashboard.js"></script>
     </body>

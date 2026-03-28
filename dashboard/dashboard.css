@@ -3,3 +3,29 @@ body {
     height: 600px;
     margin: 0;
 }
+
+.tabs-menu {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.tab-btn {
+    padding: 8px 16px;
+    cursor: pointer;
+    border: 1px solid #ccc;
+    background: #f0f0f0;
+}
+
+.tab-btn.active {
+    background: #fff;
+    border-bottom: 2px solid #007bff;
+    font-weight: bold;
+}
+
+.btn{
+    cursor: pointer;
+    padding: 1rem;
+    background-color: "#74c7ec";
+    color: "#cdd6f4"
+}
