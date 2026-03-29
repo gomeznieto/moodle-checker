@@ -1,50 +1,61 @@
-chrome.storage.local.get(["moodle"], async (result) => {
-    const moodleData = result.moodle || {};
-    const dataContent = document.getElementById('moodle-data');
+// SECTION MENSAJES
+const renderMainSection = async (moodleData) => {
 
-    // @ts-ignore
+    const dataContent = document.getElementById('moodle-data');
+    dataContent.innerHTML = "";
+
     if (!moodleData.classRoom) {
         dataContent.innerHTML = "<p>No hay datos guardados.</p>";
         return;
     }
 
+    // Contenedor principal
     const mainContainer = document.createElement("div");
+    mainContainer.id = "main-container";
 
-    // @ts-ignore
-    for (const classRoom of Object.values(moodleData.classRoom)) {
+    for (const [classroomId, classRoom] of Object.entries(moodleData.classRoom)) {
         if (!classRoom.forums) continue;
-            const classDiv = document.createElement("div");
 
-            // NOMBRE DEL AULA
-            classDiv.innerHTML = `<h2>Aula: ${classRoom.name || "Sin Nonbre"}</h2>`;
-            //TODO: Agregar un contador de mensajes totales sin leer.
+        // Nombre del aula
+        const titleSection = document.createElement("h2");
+        titleSection.innerHTML = `Aula: ${classRoom.name || "Sin Nonbre"}`;
+        mainContainer.appendChild(titleSection);
+        
+        // Recorremos las aulas
 
-        for (const forum of Object.values(classRoom.forums)) {
+        for (const [forumId, forum] of Object.entries(classRoom.forums || {})) {
+            // Nombre del Foro
             const forumDiv = document.createElement("div");
             forumDiv.innerHTML = `<h3>Foro: ${forum.name}</h3>`;
 
             if (!forum.discussions) continue;
-
-            for (const thread of Object.values(forum.discussions)) {
-                const threadDiv = document.createElement("details"); // Usamos details para que sea colapsable
+            for (const [discussionId, thread] of Object.entries(forum.discussions || {})){
+                // Entradas del hilo
+                const threadDiv = document.createElement("details");
                 threadDiv.style.margin = "10px 0";
-                
+
                 // Título del hilo y contador de mensajes
                 threadDiv.innerHTML = `
-                    <summary style="font-size: 1.2em; cursor: pointer; font-weight: bold;">
-                        ${thread.name} <span style="color: red;">(${thread.newMessages || 0} nuevos)</span>
-                    </summary>
-                    <div class="post-principal" style="background: #eee; padding: 10px; margin-top: 5px;">
-                        <strong>${thread.post?.author || 'Desconocido'}</strong> dijo a las: <strong>${thread.post?.time || 'Sin hora' }</strong>
-                        <div>${thread.post?.contentHTML || ''}</div>
+                <summary style="font-size: 1.2em; cursor: pointer; font-weight: bold;">
+                    ${thread.name} <span style="color: red;">(${thread.newMessages || 0} nuevos)</span>
+                    <div class="btn_delete" 
+                        data-classroom="${classroomId}" 
+                        data-forum="${forumId}" 
+                        data-discussion="${discussionId}">
+                    Borrar Conversación
                     </div>
+                </summary>
+                <div class="post-principal" style="background: #eee; padding: 10px; margin-top: 5px;">
+                    <strong>${thread.post?.author || 'Desconocido'}</strong> dijo a las: <strong>${thread.post?.time || 'Sin hora' }</strong>
+                    <div>${thread.post?.contentHTML || ''}</div>
+                </div>
                 `;
 
                 // Renderizado de respuestas si existen
                 if (thread?.replies && thread?.replies?.length > 0) {
                     const repliesContainer = document.createElement("div");
                     repliesContainer.style.paddingLeft = "20px";
-                    
+
                     for (const reply of thread.replies) {
                         const replyDiv = document.createElement("div");
                         replyDiv.style.borderLeft = "2px solid #ccc";
@@ -56,8 +67,8 @@ chrome.storage.local.get(["moodle"], async (result) => {
                             replyDiv.style.background = "#ccc";
                         }
                         replyDiv.innerHTML = `
-                            <strong>${reply.author}</strong> respondió a las <strong>${reply?.time || 'Sin hora'}</strong>:
-                            <div>${reply.contentHTML}</div>
+                        <strong>${reply.author}</strong> respondió a las <strong>${reply?.time || 'Sin hora'}</strong>:
+                        <div>${reply.contentHTML}</div>
                         `;
                         repliesContainer.appendChild(replyDiv);
                     }
@@ -66,24 +77,27 @@ chrome.storage.local.get(["moodle"], async (result) => {
 
                 forumDiv.appendChild(threadDiv);
             }
-            mainContainer.appendChild(classDiv);
+
             mainContainer.appendChild(forumDiv);
         }
     }
-    
+
     dataContent.appendChild(mainContainer);
+}
+
+// INIT MAIN SECTION
+chrome.storage.local.get(["moodle"], async (result) => {
+    const moodleData = result.moodle || {};
+    await renderMainSection(moodleData);
 });
 
-// INTERVALE TIME
+// INIT SETTING SECTION
 chrome.storage.local.get(["config"], result => {
     const intervaleTimeMinutes = document.getElementById('intervaleTimeMinutes');
     intervaleTimeMinutes.innerText = `${result.config.checkInterval || '5'}`;
-
 });
 
 // FORMULARIO ADD CLASES
-/* global chrome */
-
 document.getElementById('form-classroom').addEventListener('submit', async e => {
     e.preventDefault();
 
@@ -105,7 +119,7 @@ document.getElementById('form-classroom').addEventListener('submit', async e => 
         error.error = true;
         error.message = "El código no fue completado o no tiene el estilo correcto: solo números"; 
     } 
-    
+
     // Verificamos si el código existe evitando crash si classRoom es undefined
     const classrooms = currentConfig.classRoom || {};
     if (Object.values(classrooms).includes(parseInt(code))) {
@@ -115,7 +129,7 @@ document.getElementById('form-classroom').addEventListener('submit', async e => 
 
     const section = formData.get('section');
 
-const updatedConfig = {
+    const updatedConfig = {
         ...currentConfig,
         classRoom: {
             ...(currentConfig.classRoom || {}),
@@ -209,7 +223,56 @@ const isEmpty = (obj) => {
 
 
 // CHECK NOW
-document.getElementById('check-now-btn').addEventListener('click', () => {
-    console.log("click")
-    chrome.runtime.sendMessage({ action: "check_now" });
+document.getElementById('check-now-btn').addEventListener('click', async () => {
+    await chrome.runtime.sendMessage({ action: "check_now" });
+    // const result = await chrome.runtime.sendMessage({ action: "check_now" });
+    // console.log(result.status)
+    // if(result && result.status === "terminado"){
+    //     const result = await chrome.storage.local.get(["moodle"]);
+    //     const moodleData = result.moodle || {};
+    //     await renderMainSection(moodleData);
+    // }
 });
+
+// RENDERIZA SI MODIFICAMOS EL LOCAL STORAGE
+chrome.storage.onChanged.addListener(async (changes, namespace) => {
+    if (namespace === 'local' && changes.moodle) {
+        const { moodle: moodleData } = await chrome.storage.local.get(["moodle"]);
+        await renderMainSection(moodleData);
+    }
+});
+
+document.getElementById('moodle-data').addEventListener('click', async(e) => {
+    e.preventDefault(); 
+    const boton = e.target.closest('.btn_delete');
+
+    if (boton) {
+        const dataDiscussion = boton.dataset;
+
+        await deleteThreads(dataDiscussion)
+    }
+});
+
+// DELETE THREADS
+const deleteThreads = async (dataDiscussion) => {
+    const { moodle: moodleData } = await chrome.storage.local.get(["moodle"]);
+    const { classroom, forum, discussion } = dataDiscussion;
+    const classroomObj = moodleData["classRoom"]?.[classroom];
+    const forumObj = classroomObj?.forums?.[forum];
+
+    if (forumObj?.discussions?.[discussion]) {
+        delete forumObj.discussions[discussion];
+
+        if (Object.keys(forumObj.discussions).length === 0) {
+            delete classroomObj.forums[forum];
+        }
+
+        if (Object.keys(classroomObj.forums).length === 0) {
+            delete moodleData["classRoom"][classroom];
+        }
+
+        await chrome.storage.local.set({ moodle: moodleData });
+    }
+}
+
+

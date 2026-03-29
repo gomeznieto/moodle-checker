@@ -3,6 +3,7 @@
 // const URL = `${URL_CLASS}${AULA}&section=${SECTION}#tabs-tree-start` //Aseguramos que empiece en la seccion que necesitamos
 const BLACK_LIST=[]
 
+// INSTALAMOS LA ALARMA
 chrome.runtime.onInstalled.addListener(async () => {
     console.log("Iniciando");
     const { config } = await chrome.storage.local.get(["config"]);
@@ -22,6 +23,7 @@ chrome.runtime.onInstalled.addListener(async () => {
     
 });
 
+// ALARMA
 chrome.alarms.onAlarm.addListener(async (alarm) => {
     if(alarm.name == "checkMoodle"){
         try {
@@ -233,20 +235,24 @@ const parserOffscreen = async (object) => {
     return result;
 }
 
-chrome.runtime.onMessage.addListener( async (request, sender, sendResponse) => {
-    console.log("Revisar ahora")
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === "check_now") {
+        
+        (async () => {
+            const { config } = await chrome.storage.local.get(["config"]);
+            for (const [code, c] of Object.entries(config.classRoom || {})) {
+                const name = c.name;
+                const section = c.section;
+                const domain = c.domainOptional;
+                const url = `${domain}/course/view.php?id=${code}&section=${c.section}#tabs-tree-start`;
 
-        const { config } = await chrome.storage.local.get(["config"]);
-        for (const [code, c] of Object.entries(config.classRoom || {})) {
-            const name = c.name;
-            const section = c.section;
-            const domain = c.domainOptional;
-            const url = `${domain}/course/view.php?id=${code}&section=${c.section}#tabs-tree-start`
-
-            console.log({name, section, url, code})
-            await processMoodle(code, name, section, url);
-        }
+                await processMoodle(code, name, section, url);
+            }
+            
+            // Se responde una sola vez, fuera del bucle y al finalizar todo
+            sendResponse({ status: "terminado" });
+        })();
     }
-    return true; // Necesario si vas a usar await o lógica asíncrona dentro del listener
+    
+    return true;
 });

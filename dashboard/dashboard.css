@@ -24,8 +24,18 @@ body {
 }
 
 .btn{
+    width: 150px;
     cursor: pointer;
-    padding: 1rem;
-    background-color: "#74c7ec";
-    color: "#cdd6f4"
+    padding: 0.5rem;
+    background-color: #74c7ec;
+    color: #cdd6f4;
+}
+
+.btn_delete{
+    width: 150px;
+    cursor: pointer;
+    padding: 0.5rem;
+    background-color: #f38ba8;
+    color: #cdd6f4;
+
 }
