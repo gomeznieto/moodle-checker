@@ -1,41 +1,435 @@
-body {
-    width: 800px;
-    height: 600px;
-    margin: 0;
+/* =====================================
+    COLORES
+   ===================================== */
+:root {
+  /* Accents */
+  --rosewater: #f4dbd6;
+  --flamingo: #f0c6c6;
+  --pink: #f5bde6;
+  --mauve: #c6a0f6;
+  --red: #ed8796;
+  --maroon: #ee99a0;
+  --peach: #f5a97f;
+  --yellow: #eed49f;
+  --green: #a6da95;
+  --teal: #8bd5ca;
+  --sky: #91d7e3;
+  --sapphire: #7dc4e4;
+  --blue: #8aadf4;
+  --lavender: #b7bdf8;
+
+  /* Text & Overlays */
+  --text: #cad3f5;
+  --subtext1: #b8c0e0;
+  --subtext0: #a5adcb;
+  --overlay2: #939ab7;
+  --overlay1: #8087a2;
+  --overlay0: #6e738d;
+
+  /* Surfaces & Backgrounds */
+  --surface2: #5b6078;
+  --surface1: #494d64;
+  --surface0: #363a4f;
+  --base: #24273a;
+  --mantle: #1e2030;
+  --crust: #181926;
 }
 
+/* =====================================
+   NORMALIZE 
+   ===================================== */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+}
+
+img, picture, video, canvas, svg {
+  display: block;
+  max-width: 90%;
+}
+
+input, button, textarea, select {
+  font: inherit;
+}
+
+body {
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  background-color: var(--base); /* Usando tu paleta Catppuccin */
+  color: var(--text);
+  font-family: system-ui, -apple-system, sans-serif;
+  min-width: 350px; /* Tamaño mínimo típico para popups de Chrome */
+}
+
+ul, ol {
+  list-style: none;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+
+/* =====================================
+   GENERALES 
+   ===================================== */
+
+body {
+    font-family: "Roboto", sans-serif;
+    display: flex;
+    flex-direction: column;
+    min-width: 450px;
+    max-height: 600px;
+    color: var(--text);
+    background-color: var(--base);
+    overflow: hidden;
+}
+
+/* =====================================
+SCROLL 
+===================================== */
+
+.scrollable-content {
+    flex-grow: 1;
+    overflow-y: auto;
+}
+
+.scrollable-content::-webkit-scrollbar {
+    width: 6px;
+}
+.scrollable-content::-webkit-scrollbar-thumb {
+    background-color: var(--surface2);
+    border-radius: 10px;
+}
+
+/* =====================================
+MENU 
+===================================== */
+
 .tabs-menu {
+    flex-shrink: 0;
+    height: 50px;
+    background-color: var(--base);
     display: flex;
     gap: 10px;
     margin-bottom: 10px;
+    position: sticky;
+    top: 0;
+}
+
+.tab:hover{
+    border-bottom: 3px solid var(--green);
 }
 
 .tab-btn {
+    background-color: var(--base);
     padding: 8px 16px;
     cursor: pointer;
-    border: 1px solid #ccc;
-    background: #f0f0f0;
 }
 
 .tab-btn.active {
-    background: #fff;
-    border-bottom: 2px solid #007bff;
+    border-bottom: 3px solid var(--pink);
     font-weight: bold;
 }
 
+/* =====================================
+SECTIONS
+===================================== */
+.section-header{
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+.title-section{
+    color: var(--mauve);
+    font-size: 1.3rem;
+    margin-bottom: 1rem;
+}
+
+.tab-content{
+    padding: 1rem;
+}
+
+
+/* =====================================
+ALERT
+===================================== */
+
+.alert-container {
+    margin-bottom: 1rem;
+    padding: 10px;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    display: none;
+}
+
+.alert-success {
+    display: block;
+    background-color: var(--green);
+    color: var(--base);
+}
+
+.alert-error {
+    display: block;
+    background-color: var(--red);
+    color: var(--base);
+}
+
+/* =====================================
+FORMS
+===================================== */
+.form{
+    margin: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+    padding: 1rem;
+    background-color: var(--mantle);
+    border-radius: 8px;
+}
+
+.form-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+/* Estilo de las etiquetas (Labels) */
+.form-content label {
+    color: var(--lavender);
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Estilo de los inputs */
+.form-content input {
+    background-color: var(--surface0);
+    border: 1px solid var(--surface1);
+    color: var(--text);
+    padding: 10px 12px;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Estado Focus del input */
+.form-content input:focus {
+    border-color: var(--blue);
+    box-shadow: 0 0 0 2px var(--surface1);
+}
+
+/* Placeholder (opcional, por si agregás) */
+.form-content input::placeholder {
+    color: var(--overlay0);
+}
+
+/* Centrado del botón */
+#form_setting .btn {
+    align-self: center; /* Lo centra horizontalmente sin afectar su tamaño */
+    margin-top: 0.5rem;
+    min-width: 120px; /* Le da una base sólida visual */
+}
+
+/* =====================================
+BOTONES
+===================================== */
+
 .btn{
-    width: 150px;
+    appearance: none;
+    background: none;
+    border: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    font-weight: normal;
+    max-width: fit-content;
     cursor: pointer;
-    padding: 0.5rem;
-    background-color: #74c7ec;
-    color: #cdd6f4;
+    padding: 0.3rem 0.6rem;
+    border-radius: 5px;
+    transition: all 0.2s ease;
 }
 
-.btn_delete{
-    width: 150px;
-    cursor: pointer;
-    padding: 0.5rem;
-    background-color: #f38ba8;
-    color: #cdd6f4;
-
+.btn:hover {
+    filter: brightness(1.1);
 }
+
+.btn-check{
+    color: var(--crust);
+    background-color: var(--lavender);
+}
+
+/* =====================================
+ACTIONS 
+===================================== */
+
+.bg-submit{
+    background-color: var(--blue);
+}
+
+.bg-delete{
+    background-color: var(--red);
+    color: var(--crust);
+}
+
+.bg-favorite{
+    background-color: var(--yellow);
+    color: var(--crust);
+}
+
+.bg-silent{
+    background-color: var(--sky);
+    color: var(--crust);
+}
+
+.bg-new-message{
+    background-color: var(--crust);
+    color:var(--text);
+}
+
+.fc-delete{
+    color: var(--red);
+}
+
+.fc-favorite{
+    color: var(--yellow);
+}
+
+.fc-silent{
+    color: var(--sky);
+}
+
+.fc-new-message{
+    color:var(--text);
+}
+
+
+/* =====================================
+CLASS ROOMS 
+===================================== */
+
+.title-classroom{
+    color: var(--teal);
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+    font-weight: bold;
+}
+
+.classroom-container{
+    width: 100%;
+    background-color: var(--mantle);
+    padding: 1rem;
+    border-bottom: 3px solid var(--teal);
+    margin-bottom: 1rem;
+    border-radius: 15px;
+    margin-bottom: 1rem;;
+}
+
+.classroom-header{
+    margin-bottom: 1rem;
+}
+
+/* =====================================
+FORUM 
+===================================== */
+.forum-container{
+    margin-left: 1rem;
+}
+
+.summary-posts{
+    font-size: 0.8rem;
+    cursor: pointer;
+    font-weight: bold;
+    margin-left: 1rem;
+}
+
+/* =====================================
+POSTS 
+===================================== */
+
+.post-principal{
+    border-left: 3px solid var(--mauve);
+    margin-left: 1rem;
+    margin-top: 0.5rem;
+}
+
+.replies-container{
+    margin-left: 2rem;
+    padding: 0.5rem;
+}
+
+.thread-container{
+    padding: 0.5rem;
+}
+
+.reply-content{
+    border-left: 3px solid var(--peach);
+    margin-top: 0.5rem;
+    border-bottom: 1px solid var(--surface2);
+}
+
+.post-principal .post-head{
+    background-color: var(--surface0)
+}
+
+.reply-content .post-head{
+    background-color: var(--surface0)
+}
+
+.reply-content .post-body{
+    background-color: var(--surface1)
+}
+
+.post-principal .post-body{
+    background-color: var(--surface1)
+}
+
+.post-head{
+    padding: 0.5rem;
+}
+
+.post-body{
+    padding: 0.5rem;
+}
+
+.is-unread{
+    background-color: var(--yellow)!important;
+    color:var(--crust);
+}
+
+.post-link,
+.time,
+.author{
+    font-weight: bold;
+}
+
+.post-link{
+    color: var(--sky);
+}
+
+/* =====================================
+BADGES 
+===================================== */
+
+.badge{
+    aspect-ratio: 1 / 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: normal;
+    line-height: 1;
+    min-width: 1em;
+    border-radius: 50%;
+    padding: 0.1rem;
+}
+

@@ -4,68 +4,99 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <title></title>
         <link rel="stylesheet" href="dashboard.css">
+        <link rel="stylesheet" href="https://www.nerdfonts.com/assets/css/webfont.css">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Playwrite+NZ+Basic:wght@100..400&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
     </head>
     <body>
         <nav class="tabs-menu">
-            <button class="tab-btn active" data-target="view-data">Dashboard</button>
-            <button class="tab-btn" data-target="view-settings">Configuración</button>
-            <button class="tab-btn" data-target="view-addClassRooms">Agregar Aula</button>
-            <button class="tab-btn" data-target="view-classRooms">Aulas</button>
+            <div class="tab-btn active tab" data-target="view-data">Mensajes</div>
+            <div class="tab-btn tab" data-target="view-settings">Configuración</div>
+            <div class="tab-btn tab" data-target="view-addClassRooms">Agregar</div>
+            <div class="tab-btn tab" data-target="view-classRooms">Aulas</div>
+            <div class="tab-btn tab" data-target="view-silent">Silenciados</div>
         </nav>
-        <hr>
-        <section id="view-classRooms" class="tab-content" style="display: none;">
-            <h2>Aulas</h2>
-            <div id="classRooms-Data"></div>
-        </section>
+        <main class="scrollable-content">
+            <!-- Foros silenciados -->
+            <section id="view-silent" class="tab-content" style="display: none;">
+                <h1 class="title-section">Foros Silenciados</h1>
+                <div id="silent-classRooms-Data"></div>
+            </section>
 
-        <section id="view-settings" class="tab-content" style="display: none;">
-            <h2>configuración</h2>
-            <form id="form_setting">
-                <div class="form-content">
-                    <label  id="url">url base</label>
-                    <input name="domain" id=="url"/>
-                </div>
+            <!-- Aulas guardas -->
+            <section id="view-classRooms" class="tab-content" style="display: none;">
+                <h1 class="title-section">Aulas</h1>
+                <div id="classRooms-Data"></div>
+            </section>
+            <!-- Configuración -->
+            <section id="view-settings" class="tab-content" style="display: none;">
+                <h1 class="title-section">Configuración</h1>
 
-                <div class="form-content">
-                    <label id="interval">Intervalo</label>
-                    <input name="timeInterval" id=="interval"/>
-                </div>
-                <button type="submit" btn_setting">Guardar</button>
-            </form>
-        </section>
+                <div id="alert" class="alert-container"></div>
 
-        <section id="view-addClassRooms" class="tab-content" style="display: none;">
-            <h2>Ingresar nueva aula</h2>
-            <div id="alert" class=""></div>
-            <form id="form-classroom">
-                <div class="form-content">
-                    <label id="classRoomName">Nombre</label>
-                    <input name="name" id=="classRoomName"/>
-                </div>
-                <div class="form-content">
-                    <label id="classRoomCode">Código del aula</label>
-                    <input name="code" id=="classRoomCode"/>
-                </div>
-                <div class="form-content">
-                    <label id="classRoomSection">Seccion</label>
-                    <input name="section" id=="classRoomSection"/>
-                </div>
-                <div class="form-content">
-                    <label id="url">url base</label>
-                    <input name="domain" id=="url"/>
-                </div>
-                <button id="btn_classRoom">Guardar</button>
-            </form>
-        </section>
+                <div class="form-container">
+                    <form class="form" id="form_setting">
+                        <div class="form-content">
+                            <label for="url">URL Base</label>
+                            <input name="domain" id="url" placeholder="https://moodle.ejemplo.com" />
+                        </div>
 
-        <section id="view-data" class="tab-content">
-            <h1>Dashboard</h1>
-            <div id="check-now-btn" class="btn">Revisar ahora</div>
-            <div id="intervaleTime">
-                <p>Tiempo de Intervalo: <span id="intervaleTimeMinutes"></span></p>
-            </div>
-            <div id="moodle-data"></div>
-        </section>
+                        <div class="form-content">
+                            <label for="interval">Intervalo (minutos)</label>
+                            <input name="timeInterval" id="interval" type="number" placeholder="15" />
+                        </div>
+
+                        <button type="submit" class="btn bg-submit">Guardar</button>
+                    </form>
+                </div>
+            </section>
+            <!-- Agregar Aulas -->
+            <section id="view-addClassRooms" class="tab-content" style="display: none;">
+                <h1 class="title-section">Agregar aula</h1>
+
+                <div id="alert" class="alert-container"></div>
+
+                <div class="form-container">
+                    <form class="form" id="form-classroom">
+                        <div class="form-content">
+                            <label for="classRoomName">Nombre</label>
+                            <input name="name" id="classRoomName" placeholder="Ej: Programación III" required />
+                        </div>
+
+                        <div class="form-content">
+                            <label for="classRoomCode">Código del aula</label>
+                            <input name="code" id="classRoomCode" placeholder="Ej: 6589" required />
+                        </div>
+
+                        <div class="form-content">
+                            <label for="classRoomSection">Sección</label>
+                            <input name="section" id="classRoomSection" placeholder="Ej: 457222" />
+                        </div>
+
+                        <div class="form-content">
+                            <label for="url">URL Base</label>
+                            <input name="domain" id="url" placeholder="https://moodle.utn.edu.ar" />
+                        </div>
+
+                        <button type="submit" id="btn_classRoom" class="btn bg-submit">
+                            Guardar Aula
+                        </button>
+                    </form>
+                </div>
+            </section>
+            <!-- Principal -->
+            <section id="view-data" class="tab-content">
+                <h1 class="title-section">Mensajes</h1>
+                <div class="section-header">
+                    <div id="check-now-btn" class="btn btn-check">Revisar ahora</div>
+                    <div id="intervaleTime">
+                        <p>Tiempo de Intervalo: <span id="intervaleTimeMinutes"></span></p>
+                    </div>
+                </div>
+                <div id="moodle-data" class="section-container"></div>
+            </section>
+        </main>
 
         <script src="dashboard.js"></script>
     </body>
