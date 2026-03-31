@@ -60,10 +60,9 @@ input, button, textarea, select {
 body {
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
-  background-color: var(--base); /* Usando tu paleta Catppuccin */
+  background-color: var(--base);
   color: var(--text);
   font-family: system-ui, -apple-system, sans-serif;
-  min-width: 350px; /* Tamaño mínimo típico para popups de Chrome */
 }
 
 ul, ol {
@@ -84,8 +83,8 @@ body {
     font-family: "Roboto", sans-serif;
     display: flex;
     flex-direction: column;
-    min-width: 450px;
-    max-height: 600px;
+    min-width: 500px;
+    max-height: 610px;
     color: var(--text);
     background-color: var(--base);
     overflow: hidden;
@@ -114,23 +113,45 @@ MENU
 
 .tabs-menu {
     flex-shrink: 0;
-    height: 50px;
+    height: 80px;
     background-color: var(--base);
     display: flex;
-    gap: 10px;
     margin-bottom: 10px;
     position: sticky;
     top: 0;
 }
 
-.tab:hover{
-    border-bottom: 3px solid var(--green);
+.tab {
+    overflow: hide;
+    flex-shrink: 0;
+    padding: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.nav-icon{
+    font-size: 1.1rem!important;
+}
+
+.nav-item {
+    font-size: 1rem;
 }
 
 .tab-btn {
+    align-content: center;
+    min-width: 100px;
     background-color: var(--base);
-    padding: 8px 16px;
+    padding: 0.5rem;
     cursor: pointer;
+    border-bottom: 1px solid var(--overlay2);
+}
+
+.tab-btn:hover{
+    color: var(--teal);
+    background-color: var(--surface0);
 }
 
 .tab-btn.active {
@@ -142,20 +163,38 @@ MENU
 SECTIONS
 ===================================== */
 .section-header{
+    position: sticky;
+    bottom: 0;
     display: flex;
-    gap: 1rem;
-    margin-bottom: 1rem;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    margin-top: 1rem;
+    border-top: 1px solid var(--overlay2);
 }
 .title-section{
     color: var(--mauve);
     font-size: 1.3rem;
     margin-bottom: 1rem;
+    margin-left: 0.5rem;
 }
 
-.tab-content{
-    padding: 1rem;
+.section-container{
+    flex-grow: 1;
+    min-height: 375px;
 }
 
+.section-header .intervale-time{
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+    align-items: center;
+    font-size: 1rem;
+}
+
+.intervale-time-data{
+    font-weight: bold;
+}
 
 /* =====================================
 ALERT
@@ -200,7 +239,6 @@ FORMS
     gap: 0.5rem;
 }
 
-/* Estilo de las etiquetas (Labels) */
 .form-content label {
     color: var(--lavender);
     font-size: 0.85rem;
@@ -209,7 +247,6 @@ FORMS
     letter-spacing: 0.5px;
 }
 
-/* Estilo de los inputs */
 .form-content input {
     background-color: var(--surface0);
     border: 1px solid var(--surface1);
@@ -221,22 +258,19 @@ FORMS
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-/* Estado Focus del input */
 .form-content input:focus {
     border-color: var(--blue);
     box-shadow: 0 0 0 2px var(--surface1);
 }
 
-/* Placeholder (opcional, por si agregás) */
 .form-content input::placeholder {
     color: var(--overlay0);
 }
 
-/* Centrado del botón */
-#form_setting .btn {
-    align-self: center; /* Lo centra horizontalmente sin afectar su tamaño */
+.form .btn {
+    align-self: center;
     margin-top: 0.5rem;
-    min-width: 120px; /* Le da una base sólida visual */
+    min-width: 120px;
 }
 
 /* =====================================
@@ -250,11 +284,11 @@ BOTONES
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.7rem;
+    font-size: 1rem;
     font-weight: normal;
     max-width: fit-content;
     cursor: pointer;
-    padding: 0.3rem 0.6rem;
+    padding: 0.5rem 0.8rem;
     border-radius: 5px;
     transition: all 0.2s ease;
 }

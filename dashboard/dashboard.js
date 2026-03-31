@@ -163,7 +163,7 @@ chrome.storage.local.get(["moodle"], async (result) => {
 // INIT SETTING SECTION
 chrome.storage.local.get(["config"], result => {
     const intervaleTimeMinutes = document.getElementById('intervaleTimeMinutes');
-    intervaleTimeMinutes.innerText = `${result.config.checkInterval || '5'}`;
+    intervaleTimeMinutes.innerText = `${result.config.checkInterval || '5'} ${result.config.checkInterval > 1 ? ' minutos' : 'minuto'}`;
 });
 
 // FORMULARIO ADD CLASES
