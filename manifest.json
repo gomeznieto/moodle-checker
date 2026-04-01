@@ -6,7 +6,6 @@
     "description": "Primer paso para nuestro dashboard de docentes",
     "permissions": ["alarms", "notifications", "storage", "offscreen"],
     "icons": {
-        "32": "icon/icon32.png",
         "128": "icon/icon128.png"
     },
     "background": {

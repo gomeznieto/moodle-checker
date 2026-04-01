@@ -84,7 +84,7 @@ body {
     display: flex;
     flex-direction: column;
     min-width: 500px;
-    max-height: 610px;
+    max-height: 590px;
     color: var(--text);
     background-color: var(--base);
     overflow: hidden;
@@ -116,7 +116,6 @@ MENU
     height: 80px;
     background-color: var(--base);
     display: flex;
-    margin-bottom: 10px;
     position: sticky;
     top: 0;
 }
@@ -169,8 +168,8 @@ SECTIONS
     justify-content: space-between;
     align-items: center;
     padding: 1rem;
-    margin-top: 1rem;
     border-top: 1px solid var(--overlay2);
+    background-color:var(--base);
 }
 .title-section{
     color: var(--mauve);
@@ -180,8 +179,8 @@ SECTIONS
 }
 
 .section-container{
-    flex-grow: 1;
-    min-height: 375px;
+    min-height: 440px;
+    padding: 0.5rem;
 }
 
 .section-header .intervale-time{
@@ -205,17 +204,14 @@ ALERT
     padding: 10px;
     border-radius: 6px;
     font-size: 0.9rem;
-    display: none;
 }
 
 .alert-success {
-    display: block;
     background-color: var(--green);
     color: var(--base);
 }
 
 .alert-error {
-    display: block;
     background-color: var(--red);
     color: var(--base);
 }
@@ -224,7 +220,6 @@ ALERT
 FORMS
 ===================================== */
 .form{
-    margin: 1rem;
     display: flex;
     flex-direction: column;
     gap: 1.2rem;
@@ -326,8 +321,8 @@ ACTIONS
 }
 
 .bg-new-message{
-    background-color: var(--crust);
-    color:var(--text);
+    background-color: var(--rosewater);
+    color:var(--crust);
 }
 
 .fc-delete{
@@ -376,14 +371,26 @@ CLASS ROOMS
 FORUM 
 ===================================== */
 .forum-container{
-    margin-left: 1rem;
+    margin-left: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.forum-title{
+    width: 100%;
+    display: inline-flex;
+    justify-content: space-between;
 }
 
 .summary-posts{
+    width: 100%;
+    display: inline-flex;
+    justify-content: space-between;
     font-size: 0.8rem;
     cursor: pointer;
     font-weight: bold;
-    margin-left: 1rem;
+    margin-left: 0.5rem;
+    border-bottom: 1px solid var(--surface0);
+    padding: 0.1rem;
 }
 
 /* =====================================
@@ -392,13 +399,12 @@ POSTS
 
 .post-principal{
     border-left: 3px solid var(--mauve);
-    margin-left: 1rem;
+    margin-left: 0.5rem;
     margin-top: 0.5rem;
 }
 
 .replies-container{
-    margin-left: 2rem;
-    padding: 0.5rem;
+    margin-left: 1rem;
 }
 
 .thread-container{
@@ -467,3 +473,11 @@ BADGES
     padding: 0.1rem;
 }
 
+/* =====================================
+IMAGE 
+===================================== */
+.img-main{
+    width: 100%;
+    display: inline-flex;
+    justify-content: center;
+}

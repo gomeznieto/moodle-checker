@@ -43,16 +43,16 @@
 
             <!-- Aulas guardas -->
             <section id="view-classRooms" class="tab-content" style="display: none;">
+                <div class="section-container">
                 <h1 class="title-section">Aulas</h1>
                 <div id="classRooms-Data"></div>
+                </div>
             </section>
             <!-- Configuración -->
             <section id="view-settings" class="tab-content" style="display: none;">
                 <div class="section-container">
                     <h1 class="title-section">Configuración</h1>
-
-                    <div id="alert" class="alert-container"></div>
-
+                    <div id="alert-setting" class="alert-container" style="display:none;"></div>
                     <div class="form-container">
                         <form class="form" id="form_setting">
                             <div class="form-content">
@@ -72,11 +72,8 @@
             <!-- Agregar Aulas -->
             <section id="view-addClassRooms" class="tab-content" style="display: none;">
                 <div class="section-container">
-
                     <h1 class="title-section">Agregar aula</h1>
-
-                    <div id="alert" class="alert-container"></div>
-
+                    <div id="alert-classroom" class="alert-container" style="display:none;"></div>
                     <div class="form-container">
                         <form class="form" id="form-classroom">
                             <div class="form-content">
@@ -110,17 +107,18 @@
             <section id="view-data" class="tab-content">
                 <div class="section-container">
                     <h1 class="title-section">Mensajes</h1>
-                    <div id="moodle-data" class="section-container"></div>
-                </div>
-                <div class="section-header">
-                    <div id="check-now-btn" class="btn btn-check">Revisar ahora</div>
-                    <div id="intervaleTime" class="intervale-time">
-                        <i class="icon nf nf-fa-clock"></i>
-                        <p>Frecuencia: <span class="intervale-time-data" id="intervaleTimeMinutes"></span></p>
-                    </div>
+                    <div id="alert-main" class="alert-container" style="display:none;"></div>
+                    <div id="moodle-data"></div>
                 </div>
             </section>
         </main>
+        <div class="section-header">
+            <div id="check-now-btn" class="btn btn-check">Revisar ahora</div>
+            <div id="intervaleTime" class="intervale-time">
+                <i class="icon nf nf-fa-clock"></i>
+                <p>Frecuencia: <span class="intervale-time-data" id="intervaleTimeMinutes"></span></p>
+            </div>
+        </div>
 
         <script src="dashboard.js"></script>
     </body>

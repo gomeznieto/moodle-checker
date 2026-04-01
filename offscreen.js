@@ -1,16 +1,17 @@
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    if (message.target === 'offscreen_forum') {
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(message.data, 'text/html');
 
-        const forumLinks = doc.querySelectorAll('a[href*="mod/forum/view.php?id="]');
+    if (message.target === 'offscreen_forum') { // Buscamos los foros con mensajes en la página inicial
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(message.data, 'text/html'); // Convertimos el texto del fetch a html
+
+        const forumLinks = doc.querySelectorAll('a[href*="mod/forum/view.php?id="]'); //Obtenemos todos los foros
 
         const forumWithMessages = Array.from(forumLinks).map( link => {
             const url = new URL(link.href);
             const container = link.closest('.activityname');
             const pill = container ? container.querySelector('.activitybadge') : null;
 
-            if(pill && pill.innerText.trim().length > 0){
+            if(pill && pill.innerText.trim().length > 0){ // SI hay mensajes nuevos los guardamos en el array
                 return {
                     id: url.searchParams.get('id'),
                     url: url,
@@ -22,7 +23,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
         sendResponse(forumWithMessages);
 
-    } else if(message.target === 'offscreen_discussion'){
+    } else if(message.target === 'offscreen_discussion'){ // Buscamos los "Hilos" de cada Foro que tenga mensajes nuevos
         const parser = new DOMParser();
         const doc = parser.parseFromString(message.data, 'text/html');
 
@@ -44,7 +45,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         }).filter(Boolean);
 
         sendResponse(forumWithMessages);
-    } else if(message.target === 'offscreen_discussion_content'){
+    } else if(message.target === 'offscreen_discussion_content'){ // Bucamos los mensajes
         const parser = new DOMParser();
         const doc = parser.parseFromString(message.data, 'text/html');
 
@@ -66,19 +67,18 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             };
         };
 
-        const mainPostNode = doc.querySelector('.forumpost.firstpost');
-        const replyNodes = doc.querySelectorAll('.forumpost:not(.firstpost)');
+        const mainPostNode = doc.querySelector('.forumpost.firstpost'); // Post principal
+        const replyNodes = doc.querySelectorAll('.forumpost:not(.firstpost)'); // Repsuestas
 
         const discussionData = {
-            titulo: mainPostNode ? mainPostNode.querySelector('h3').innerText.trim() : '',
-            url: mainPostNode ? mainPostNode.querySelector('a[href*="discuss.php?d="]').getAttribute('href') : '',
+            titulo: mainPostNode ? mainPostNode.querySelector('h3').innerText.trim() : '', // Titulo del "Hilo"
+            url: mainPostNode ? mainPostNode.querySelector('a[href*="discuss.php?d="]').getAttribute('href') : '', // Link del Hilo
             post: extractPostData(mainPostNode),
             replies: Array.from(replyNodes).map(extractPostData)
         };
 
         sendResponse(discussionData);
     }
-
 
     return true;
 });

@@ -1,13 +1,31 @@
 // SECTION MENSAJES
 const renderMainSection = async (moodleData) => {
 
+    console.log(moodleData)
+
     const dataContent = document.getElementById('moodle-data');
     dataContent.innerHTML = "";
 
     if (!moodleData.classRoom) {
-        dataContent.innerHTML = "<p>No hay datos guardados.</p>";
+        console.log("Sin datos")
+        dataContent.innerHTML = "Aún no hay datos guardados";
         return;
     }
+
+    const messages = false;
+    for(classroom of Object.values(moodleData)){
+        if(isEmpty(classroom)){
+            break;
+        }else{
+            if(classroom.newMessages > 0) messages = true;
+        }
+    }
+
+    if(!messages){
+        dataContent.innerHTML ="<div class='img-main'><img src='../assets/img/blank_space.png' /></div>" 
+    }
+
+    // consdole.log(messagesCount)
 
     // Contenedor principal
     const mainContainer = document.createElement("div");
@@ -16,7 +34,7 @@ const renderMainSection = async (moodleData) => {
 
     for (const [classroomId, classRoom] of Object.entries(moodleData.classRoom)) {
         if (!classRoom.forums) continue;
-        
+
         // Creamos el contenedor del aula
         const divClassRoom = document.createElement("div");
         divClassRoom.classList.add("classroom-container")
@@ -25,24 +43,26 @@ const renderMainSection = async (moodleData) => {
         const titleSection = document.createElement("div");
         titleSection.classList.add("classroom-header");
         titleSection.innerHTML = `
-        <h2>
-            <span class="title-classroom">${classRoom.name || "Sin Nonbre"}</span>
-        </h2>
-        `;
+<h2>
+    <span class="title-classroom">${classRoom.name || "Sin Nonbre"}</span>
+</h2>
+`;
         divClassRoom.appendChild(titleSection);
-        
+
         // Recorremos las aulas
         for (const [forumId, forum] of Object.entries(classRoom.forums || {})) {
             const threadDiv = document.createElement("div");
             threadDiv.classList.add("forum-container");
-            threadDiv.innerHTML = `<h3>
-                <i class="nf nf-fa-comments"></i>
-                <span>${forum.name}</span>
-                    <span class="badge bg-silent"
-                        data-classroom="${classroomId}" 
-                        data-forum="${forumId}"> 
+            threadDiv.innerHTML = `<h3 class="forum-title">
+                <span>
+                    <i class="nf nf-fa-comments"></i>
+                    ${forum.name}
+                </span>
+                <span class="badge bg-silent"
+                    data-classroom="${classroomId}" 
+                    data-forum="${forumId}"> 
                     <i class="nf nf-fa-bell_slash"></i>
-                    </span>
+                </span>
 
             </h3>`;
 
@@ -53,34 +73,41 @@ const renderMainSection = async (moodleData) => {
 
                 // Summary
                 threadDetail.innerHTML = `
-                <summary class="summary-posts">
-                    ${thread.name}
-                    <span class="badge bg-new-message">${thread.newMessages || -1}</span>
-                    <span class="badge fc-delete" 
-                        data-classroom="${classroomId}" 
-                        data-forum="${forumId}" 
-                        data-discussion="${discussionId}">
-                    <i class="nf nf-fa-trash"></i>
-                    </span>
-                    <span class="badge fc-favorite"
-                        data-classroom="${classroomId}" 
-                        data-forum="${forumId}" 
-                        data-discussion="${discussionId}">
-                    <i class="nf nf-fa-star"></i>
-                    </span>
-                </summary>
-                <div class="post-principal">
-                    <div class="post-head">
-                        <span class="author">${thread.post?.author || 'Desconocido'}</span>
-                        <span class="separator"> • </span>
-                        <span class="time">${thread.post?.time || 'Sin hora' }</span>
-                        <span class="separator"> • </span>
-                        <span class="post-link"><a href="${thread?.post?.link}" target="_blank"> Responder <i class="nf nf-fa-external_link"></i></a></span>
+<summary class="summary-posts">
+    <span>
+        <span>${thread.name}</span>
+        <span class="badge bg-new-message">${thread.newMessages || -1}</span>
+    </span>
+    <span class="forum-actions">
+        <span class="badge fc-delete" 
+            id="btn-delete"
+            data-classroom="${classroomId}" 
+            data-forum="${forumId}" 
+            data-discussion="${discussionId}">
+            <i class="nf nf-fa-trash"></i
+        </span>
+        <span 
+            id="btn-fav"
+            class="badge fc-favorite"
+            data-classroom="${classroomId}" 
+            data-forum="${forumId}" 
+            data-discussion="${discussionId}">
+            <i class="nf nf-fa-star"></i>
+        </span>
+    </span>
+</summary>
+<div class="post-principal">
+    <div class="post-head">
+        <span class="author">${thread.post?.author || 'Desconocido'}</span>
+        <span class="separator"> • </span>
+        <span class="time">${thread.post?.time || 'Sin hora' }</span>
+        <span class="separator"> • </span>
+        <span class="post-link"><a href="${thread?.post?.link}" target="_blank"> Responder <i class="nf nf-fa-external_link"></i></a></span>
 
-                    </div>
-                    <div class="post-body">${thread.post?.contentHTML || ''}</div>
-                </div>
-                `;
+    </div>
+    <div class="post-body">${thread.post?.contentHTML || ''}</div>
+</div>
+`;
 
                 if (thread?.replies && thread?.replies?.length > 0) {
                     const repliesContainer = document.createElement("div");
@@ -92,19 +119,19 @@ const renderMainSection = async (moodleData) => {
                         replyDiv.classList.add("reply-content");
 
                         replyDiv.innerHTML = `
-                            <div class="post-container">
-                                <div class="post-head ${reply?.isUnread ? 'is-unread' : ''}">
-                                    <span class="author">${reply.author}</span> 
-                                    <span class="separator"> • </span>
-                                    <span class="time">${reply?.time || 'Sin hora'}</span>
-                                    <span class="separator"> • </span>
-                                    <span class="post-link"><a href="${reply?.link}" target="_blank"> Responder <i class="nf nf-fa-external_link"></i></a></span>
-                                </div>
-                                <div class="post-body">
-                                    ${reply.contentHTML}
-                                </div>
-                            </div>
-                        `;
+<div class="post-container">
+    <div class="post-head ${reply?.isUnread ? 'is-unread' : ''}">
+        <span class="author">${reply.author}</span> 
+        <span class="separator"> • </span>
+        <span class="time">${reply?.time || 'Sin hora'}</span>
+        <span class="separator"> • </span>
+        <span class="post-link"><a href="${reply?.link}" target="_blank"> Responder <i class="nf nf-fa-external_link"></i></a></span>
+    </div>
+    <div class="post-body">
+        ${reply.contentHTML}
+    </div>
+</div>
+`;
                         repliesContainer.appendChild(replyDiv);
                     }
                     threadDetail.appendChild(repliesContainer);
@@ -133,14 +160,14 @@ const renderClassRoomSection = async (moodleData) => {
         const classroomdiv = document.createElement("div");
 
         classroomdiv.innerHTML = `
-        <div class="silent-classroom-item">
-            <span>${classroom?.name}</span>
-            <span class="badge fc-delete" 
-                data-classroom="${classroomId}" 
-            <i class="nf nf-fa-trash"></i>
-            </span>
-        </div>
-        `
+<div class="silent-classroom-item">
+    <span>${classroom?.name}</span>
+    <span class="badge fc-delete" 
+        data-classroom="${classroomId}" 
+        <i class="nf nf-fa-trash"></i>
+    </span>
+</div>
+`
         sectionDiv.append(classroomdiv);
     }
 
@@ -171,6 +198,7 @@ document.getElementById('form-classroom').addEventListener('submit', async e => 
     e.preventDefault();
 
     let error = {
+        element: "alert-classroom",
         error: false,
         message: ""
     };
@@ -225,6 +253,7 @@ document.getElementById('form_setting').addEventListener('submit', async (e) => 
     e.preventDefault();
 
     let error = {
+        element:"alert-setting",
         error: false,
         message: ""
     };
@@ -259,18 +288,23 @@ document.getElementById('form_setting').addEventListener('submit', async (e) => 
 });
 
 // ALERT
-const launchAlert = (error) => {
-    const alert = document.getElementById("alert");
-    alert.style.opacity = "1";
+const launchAlert = ({element, error, message}) => {
+    console.log("Lanzamos error")
+    const alert = document.getElementById(element);
+    alert.classList.remove("alert-success", "alert-error");
+
+    if(!error){
+        alert.classList.add("alert-success");
+    } else {
+        alert.classList.add("alert-error");
+    }
+
+    alert.innerText = message;
+    alert.style.display = "block";
+
     setTimeout(() => {
-        if(!error.error){
-            alert.style.color = "#a6e3a1";
-            alert.innerText = "Guardado Correctamente";
-        } else {
-            alert.style.color = "#f38ba8";
-            alert.innerText = error.message;
-        }
-        alert.style.opacity = "2";
+        console.log("Ocultamos error")
+        alert.style.display = "none";
     }, 3000);
 }
 
@@ -290,17 +324,9 @@ const isEmpty = (obj) => {
     return Object.keys(obj).length === 0;
 }
 
-
 // CHECK NOW
 document.getElementById('check-now-btn').addEventListener('click', async () => {
     await chrome.runtime.sendMessage({ action: "check_now" });
-    // const result = await chrome.runtime.sendMessage({ action: "check_now" });
-    // console.log(result.status)
-    // if(result && result.status === "terminado"){
-    //     const result = await chrome.storage.local.get(["moodle"]);
-    //     const moodleData = result.moodle || {};
-    //     await renderMainSection(moodleData);
-    // }
 });
 
 // RENDERIZA SI MODIFICAMOS EL LOCAL STORAGE
@@ -311,11 +337,22 @@ chrome.storage.onChanged.addListener(async (changes, namespace) => {
     }
 });
 
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    console.log("Llega mensaje")
+    if (message.target === 'authenticate') {
+        launchAlert({
+            element: "alert-main",
+            error: true,
+            message: "Necesita iniciar sesión en Moodle"
+        });
+    }
+
+})
+
 document.getElementById('moodle-data').addEventListener('click', async(e) => {
-    const boton = e.target.closest('.btn_delete');
+    const boton = e.target.closest('#btn-delete');
 
     if (boton) {
-        e.preventDefault(); 
         const dataDiscussion = boton.dataset;
         await deleteThreads(dataDiscussion)
     }
@@ -340,6 +377,7 @@ const deleteThreads = async (dataDiscussion) => {
         }
 
         await chrome.storage.local.set({ moodle: moodleData });
+        launchAlert({error: false, message:"Foro borrado exitósamente"})
     }
 }
 
