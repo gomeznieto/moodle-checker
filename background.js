@@ -10,7 +10,7 @@ const processMoodle = async (id, name, section, url) => {
         // Traemos la información del aula
         const response = await fetch(url);
         const html = await response.text();
-        
+
         // Tamaño de data
         const currentLentgth = html.length;
         const {moodle : moodleData} = await chrome.storage.local.get(["moodle"]) || {}; // Traemos los datos de localStorage, si no hay lo creamos vacío
@@ -57,7 +57,7 @@ const processMoodle = async (id, name, section, url) => {
                         forum.newMessages = Number(forum.newMessages) || 0;
                         moodleData.classRoom[id].forums[forum.id] = forum;
                     }
-                    
+
                     // Guardamso la información.
                     await chrome.storage.local.set({ moodle: moodleData });
 
@@ -78,7 +78,8 @@ const processMoodle = async (id, name, section, url) => {
         }
 
     } catch (error) {
-        console.error("Error al conectar con Moodle:", error);
+        console.log(error)
+        // launchAlert({ element:"alert-container", error: true, message: "Ocurrió un error mientra se intentaba actualizar la información."})
     }
 }
 
@@ -115,7 +116,7 @@ const processMoodleForum = async (data, url) => {
                     discussion.newMessages = Number(discussion.newMessages) || 0;
                     moodleData.classRoom[data.classRoomId].forums[data.forumId].discussions[discussion.id] = discussion;
                 }
-                
+
                 // GUardamos la información en el LocalStorage
                 await chrome.storage.local.set({ moodle: moodleData });
 
@@ -136,7 +137,8 @@ const processMoodleForum = async (data, url) => {
         }
 
     } catch (error) {
-        console.error("Error al conectar con Moodle:", error);
+        console.log(error)
+        // launchAlert({error: true, message: "Ocurrió un error mientra se intentaba actualizar la información."})
     }
 }
 
@@ -168,7 +170,8 @@ const processMoodleDiscussion = async (data, url) => {
         await chrome.storage.local.set({ moodle: moodleData });
 
     } catch (error) {
-        console.error("Error al conectar con Moodle:", error);
+        console.log(error)
+        // launchAlert({error: true, message: "Ocurrió un error mientra se intentaba actualizar la información."})
     }
 }
 
@@ -205,6 +208,9 @@ const parserOffscreen = async (object) => {
     return result;
 }
 
+const launchAlert = async (error) => {
+    await chrome.runtime.sendMessage({target: "catchError", datos: error});
+}
 
 /* ===================================
    LISTENERS
@@ -213,23 +219,23 @@ const parserOffscreen = async (object) => {
 // INSTALAMOS LA ALARMA
 chrome.runtime.onInstalled.addListener(async () => {
     const { config } = await chrome.storage.local.get(["config"]);
+
+    const timeDefault = 30;
     const urlBaseDefault = "https://frgp.cvg.utn.edu.ar";
-    
+
     // Datos default
     const defaultConfig = {
         domain: urlBaseDefault,
-        checkInterval: 30,
+        checkInterval: timeDefault,
         classRooms: {}
     };
 
-    if (!config) {
+    if (!config) { // Si aún no hay configuración, guardamos datos por default
         await chrome.storage.local.set({ config: defaultConfig });
     }
 
-    // TODO: Borrar
     const interval = config?.checkInterval || defaultConfig.checkInterval;
     await chrome.alarms.create("checkMoodle", { periodInMinutes: interval });
-    
 });
 
 // ALARMA
@@ -238,40 +244,45 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
         try {
             const { config } = await chrome.storage.local.get(["config"]);
 
-            for (const [code, c] of Object.entries(config.classRoom || {})) {
-                const name = c.name;
-                const section = c.section;
-                const domain = c.domainOptional;
+            for (const [code, classroomData] of Object.entries(config.classRoom || {})) {
+                const name = classroomData.name;
+                const section = classroomData.section;
+                const domain = classroomData.domainOptional;
                 const url = `${domain}/course/view.php?id=${code}&section=${section}#tabs-tree-start`
 
+                // Iniciamos fetch
                 await processMoodle(code, name, section, url);
             }
-        } catch (error) {
-            console.log("Fallo: ", error)
+        } catch (errorObj) {
+            console.log(error)
+            // launchAlert({ element:"alert-container", error: true, message: "Ocurrió un error mientra se intentaba actualizar la información."})
         }
     }
 })
 
 // Escuchamos mensajes
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-    console.log("Revisar ahora")
-    if (request.action === "check_now") {
-        
-        (async () => {
-            const { config } = await chrome.storage.local.get(["config"]);
-            for (const [code, c] of Object.entries(config.classRoom || {})) {
-                const name = c.name;
-                const section = c.section;
-                const domain = c.domainOptional;
-                const url = `${domain}/course/view.php?id=${code}&section=${c.section}#tabs-tree-start`;
 
-                await processMoodle(code, name, section, url);
+    if (request.action === "check_now") {
+        (async () => {
+            try {
+                const { config } = await chrome.storage.local.get(["config"]);
+                for (const [code, classroomData] of Object.entries(config.classRoom || {})) {
+                    const name = classroomData.name;
+                    const section = classroomData.section;
+                    const domain = classroomData.domainOptional;
+                    const url = `${domain}/course/view.php?id=${code}&section=${section}#tabs-tree-start`
+
+                    // Iniciamos fetch
+                    await processMoodle(code, name, section, url);
+                }
+            } catch (errorObj) {
+                launchAlert({ element:"alert-container", error: true, message: "Ocurrió un error mientra se intentaba actualizar la información."})
             }
-            
             // Se responde una sola vez, fuera del bucle y al finalizar todo
             sendResponse({ status: "terminado" });
         })();
     }
-    
+
     return true;
 });

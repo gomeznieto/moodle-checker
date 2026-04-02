@@ -10,13 +10,15 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             const url = new URL(link.href);
             const container = link.closest('.activityname');
             const pill = container ? container.querySelector('.activitybadge') : null;
+            const match = pill.innerText.match(/\d+/); // Busca una secuencia de números
+            const newMessagesCount = match ? match[0] : "0";
 
             if(pill && pill.innerText.trim().length > 0){ // SI hay mensajes nuevos los guardamos en el array
                 return {
                     id: url.searchParams.get('id'),
                     url: url,
                     name: link.innerText.trim(),
-                    newMessages: pill.innerText.trim()
+                    newMessages: newMessagesCount
                 };
             } 
         }).filter(Boolean);

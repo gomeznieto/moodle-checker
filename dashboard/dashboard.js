@@ -1,23 +1,24 @@
-// SECTION MENSAJES
-const renderMainSection = async (moodleData) => {
+/* ================================
+   RENDER SECTIONS
+   ================================ */
 
-    console.log(moodleData)
+// Messages
+const renderMainSection = async (moodleData) => {
 
     const dataContent = document.getElementById('moodle-data');
     dataContent.innerHTML = "";
 
     if (!moodleData.classRoom) {
-        console.log("Sin datos")
         dataContent.innerHTML = "Aún no hay datos guardados";
         return;
     }
 
-    const messages = false;
-    for(classroom of Object.values(moodleData)){
-        if(isEmpty(classroom)){
-            break;
-        }else{
-            if(classroom.newMessages > 0) messages = true;
+    // Verificamos si hay mensajes guardados
+    let messages = false;
+
+    for(const classroom of Object.values(moodleData["classRoom"])){
+        for(const forum of Object.values(classroom.forums)){
+            if(forum.newMessages > 0) messages = true;
         }
     }
 
@@ -25,7 +26,6 @@ const renderMainSection = async (moodleData) => {
         dataContent.innerHTML ="<div class='img-main'><img src='../assets/img/blank_space.png' /></div>" 
     }
 
-    // consdole.log(messagesCount)
 
     // Contenedor principal
     const mainContainer = document.createElement("div");
@@ -148,6 +148,7 @@ const renderMainSection = async (moodleData) => {
     dataContent.appendChild(mainContainer);
 }
 
+// ClassRooms
 const renderClassRoomSection = async (moodleData) => {
     const sectionDiv = document.getElementById("classRooms-Data"); 
 
@@ -173,10 +174,176 @@ const renderClassRoomSection = async (moodleData) => {
 
 }
 
+// Silent ClassRooms
 const renderSilentClassRoomSection = async (moodleData) => {
 
 }
 
+
+/* ========================================
+   FORMS 
+   ======================================== */
+
+// Add classrooms 
+document.getElementById('form-classroom').addEventListener('submit', async e => {
+    e.preventDefault();
+
+    let alertMessage = {
+        element: "alert-classroom",
+        error: false,
+        message: ""
+    };
+
+    // Datos formulario
+    const formData = new FormData(e.target);
+    const {config : currentConfig} = await chrome.storage.local.get(["config"]) || {};
+
+    const domainOptional = formData.get('domain');
+    const name = formData.get('name');
+    const code = formData.get('code');
+    const section = formData.get('section');
+
+    // Verificamos que se haya completado y sea un número válido
+    if (!code || isNaN(parseInt(code))) {
+        alertMessage.error = true;
+        alertMessage.message = "El código no fue completado o no tiene el estilo correcto: solo números"; 
+    } 
+
+    // Verificamos si el código existe evitando crash si classRoom es undefined
+    const classrooms = currentConfig.classRoom || {};
+    if (Object.values(classrooms).includes(parseInt(code))) {
+        alertMessage.error = true;
+        alertMessage.message = "El código del aula ya existe en su base de datos";
+    }
+
+    //TODO: Probar
+    if (isInvalid(section) && isNaN(parseInt(section))) {
+        alertMessage.error = true;
+        alertMessage.message = "El código no fue completado o no tiene el estilo correcto: solo números"; 
+    } 
+
+    const updatedConfig = {
+        ...currentConfig,
+        classRoom: {
+            ...(currentConfig.classRoom || {}),
+            [code]: {
+                domainOptional: domainOptional || currentConfig.domain || "Sin Dominio", 
+                name: name || "Sin Nombre",
+                section: section || 0,
+                blackList: {} 
+            }
+        }
+    };
+
+    if (!alertMessage.error) {
+        await saveSettings(updatedConfig);
+        resetForm(e);
+    }
+
+    // Lanzamos alerta de éxito o error
+    launchAlert(alertMessage);
+});
+
+// Settings 
+document.getElementById('form_setting').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    // Recuperamos datos de setting de LocalStorage
+    const {config: currentConfig} = await chrome.storage.local.get(["config"]) || {};
+
+    // Onjeto de mensaje
+    let alertMessage = {
+        element:"alert-setting",
+        error: false,
+        message: ""
+    };
+
+    // Datos de formulario
+    const formData = new FormData(e.target);
+    const domain = formData.get('domain');
+    const timeInterval = formData.get('timeInterval');
+
+    if(isInvalid(timeInterval) && isInvalid(domain)){
+        launchAlert({ ...alertMessage, error: true, message:"Debe completar al menos uno de los campos para poder actualizar la información"})
+        return;
+    }
+
+    // Nuevo objeto para guardar
+    const updatedConfig = {
+        ...currentConfig,
+        domain: domain || currentConfig.domain,
+        checkInterval: parseInt(timeInterval) || currentConfig?.checkInterval || 30,
+    };
+
+    // Guardamos información en Local Storage
+    await saveSettings(updatedConfig);
+
+    // reiniciamos el formularios
+    resetForm(e);
+
+    // Refrescamos el tiempo en el HTML
+    refreshIntervaleTIme(timeInterval);
+
+    // Lanzamos alerta de éxito o error
+    launchAlert({...alertMessage, error: false, message: "La información se guardó correctamente."});
+
+});
+
+const refreshIntervaleTIme = (newTime) => {
+    const refreshTime = document.getElementById('intervaleTimeMinutes');
+    refreshTime.innerText = String(newTime);
+}
+
+/* ============================================
+   ALERT
+   ============================================ */
+
+const launchAlert = ({element, error, message}) => {
+    const alert = document.getElementById(element);
+    alert.classList.remove("alert-success", "alert-error");
+    let messageDisplay = '';
+    if(!error){
+        alert.classList.add("alert-success");
+        messageDisplay = `
+<i class="icon-alert nf nf-cod-check"></i>
+<span>${message}</span>
+`
+
+    } else {
+        alert.classList.add("alert-error");
+        messageDisplay = `
+<i class="icon-alert nf nf-cod-error"></i>
+<span>${message}</span>
+`
+    }
+
+    alert.innerHTML = messageDisplay;
+    alert.style.display = "block";
+
+    setTimeout(() => {
+        alert.style.display = "none";
+    }, 3000);
+}
+
+/* ============================================
+   NAV 
+   ============================================ */
+
+// Select sections
+document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(s => s.style.display = 'none');
+        btn.classList.add('active');
+        const target = btn.getAttribute('data-target');
+        document.getElementById(target).style.display = 'block';
+    });
+});
+
+
+/* ======================================
+   CHROME API 
+   ====================================== */
 
 // INIT MAIN SECTION
 chrome.storage.local.get(["moodle"], async (result) => {
@@ -193,142 +360,6 @@ chrome.storage.local.get(["config"], result => {
     intervaleTimeMinutes.innerText = `${result.config.checkInterval || '5'} ${result.config.checkInterval > 1 ? ' minutos' : 'minuto'}`;
 });
 
-// FORMULARIO ADD CLASES
-document.getElementById('form-classroom').addEventListener('submit', async e => {
-    e.preventDefault();
-
-    let error = {
-        element: "alert-classroom",
-        error: false,
-        message: ""
-    };
-
-    const formData = new FormData(e.target);
-    const {config} = await chrome.storage.local.get(["config"]);
-    const currentConfig = config || {};
-
-    const domainOptional = formData.get('domain');
-    const name = formData.get('name');
-    const code = formData.get('code');
-
-    // Verificamos que se haya completado y sea un número válido
-    if (!code || isNaN(parseInt(code))) {
-        error.error = true;
-        error.message = "El código no fue completado o no tiene el estilo correcto: solo números"; 
-    } 
-
-    // Verificamos si el código existe evitando crash si classRoom es undefined
-    const classrooms = currentConfig.classRoom || {};
-    if (Object.values(classrooms).includes(parseInt(code))) {
-        error.error = true;
-        error.message = "El código ya existe";
-    }
-
-    const section = formData.get('section');
-
-    const updatedConfig = {
-        ...currentConfig,
-        classRoom: {
-            ...(currentConfig.classRoom || {}),
-            [code]: {
-                domainOptional: domainOptional || currentConfig.domain || "Sin Dominio", 
-                name: name || "Sin Nombre",
-                section: section || 0,
-                blackList: {} 
-            }
-        }
-    };
-
-    if (!error.error) {
-        await chrome.storage.local.set({ config: updatedConfig });
-        e.target.reset();
-    }
-
-    // Lanzamos alerta de éxito o error
-    launchAlert(error);
-});
-
-// FORMULARIO SETTINGS
-document.getElementById('form_setting').addEventListener('submit', async (e) => {
-    e.preventDefault();
-
-    let error = {
-        element:"alert-setting",
-        error: false,
-        message: ""
-    };
-
-    const formData = new FormData(e.target);
-
-    const {config} = await chrome.storage.local.get(["config"]);
-    const currentConfig = config || {};
-
-    // Datos de formulario
-    const domain = formData.get('domain');
-    const timeInterval = formData.get('timeInterval');
-
-    // Nuevo objeto para guardar
-    const updatedConfig = {
-        ...currentConfig,
-        domain: domain || currentConfig.domain,
-        checkInterval: parseInt(timeInterval) || currentConfig.checkInterval,
-    };
-
-    await chrome.storage.local.set({ config: updatedConfig });
-
-    e.target.reset();
-
-    // Refrescamos el tiempo en el HTML
-    const refreshTime = document.getElementById('intervaleTimeMinutes');
-    refreshTime.innerText = String(timeInterval);
-
-    // Lanzamos alerta de éxito o error
-    launchAlert(error);
-
-});
-
-// ALERT
-const launchAlert = ({element, error, message}) => {
-    console.log("Lanzamos error")
-    const alert = document.getElementById(element);
-    alert.classList.remove("alert-success", "alert-error");
-
-    if(!error){
-        alert.classList.add("alert-success");
-    } else {
-        alert.classList.add("alert-error");
-    }
-
-    alert.innerText = message;
-    alert.style.display = "block";
-
-    setTimeout(() => {
-        console.log("Ocultamos error")
-        alert.style.display = "none";
-    }, 3000);
-}
-
-// TABS
-document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.querySelectorAll('.tab-content').forEach(s => s.style.display = 'none');
-        btn.classList.add('active');
-        const target = btn.getAttribute('data-target');
-        document.getElementById(target).style.display = 'block';
-    });
-});
-
-// OBJETOI VACIO
-const isEmpty = (obj) => {
-    return Object.keys(obj).length === 0;
-}
-
-// CHECK NOW
-document.getElementById('check-now-btn').addEventListener('click', async () => {
-    await chrome.runtime.sendMessage({ action: "check_now" });
-});
-
 // RENDERIZA SI MODIFICAMOS EL LOCAL STORAGE
 chrome.storage.onChanged.addListener(async (changes, namespace) => {
     if (namespace === 'local' && changes.moodle) {
@@ -337,20 +368,28 @@ chrome.storage.onChanged.addListener(async (changes, namespace) => {
     }
 });
 
+// MENSAJES RECIBIDOS
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    console.log("Llega mensaje")
     if (message.target === 'authenticate') {
         launchAlert({
             element: "alert-main",
             error: true,
-            message: "Necesita iniciar sesión en Moodle"
+            message: "Necesita iniciar sesión en Moodle", 
         });
     }
 
+    if (message.target === 'catchError') {
+        launchAlert(message.datos);
+    }
 })
 
+/* ======================================
+   ACTIONS BUTTONS
+   ====================================== */
+
+// Listener buttons
 document.getElementById('moodle-data').addEventListener('click', async(e) => {
-    const boton = e.target.closest('#btn-delete');
+    const boton = e.target.closest('#btn-delete'); //TODO: especificar que es de discussion
 
     if (boton) {
         const dataDiscussion = boton.dataset;
@@ -358,12 +397,18 @@ document.getElementById('moodle-data').addEventListener('click', async(e) => {
     }
 });
 
-// DELETE THREADS
+// Delete Disussion
 const deleteThreads = async (dataDiscussion) => {
     const { moodle: moodleData } = await chrome.storage.local.get(["moodle"]);
     const { classroom, forum, discussion } = dataDiscussion;
     const classroomObj = moodleData["classRoom"]?.[classroom];
     const forumObj = classroomObj?.forums?.[forum];
+
+    let alertMessage = {
+        element: "alert-container",
+        error: false,
+        message: ""
+    };
 
     if (forumObj?.discussions?.[discussion]) {
         delete forumObj.discussions[discussion];
@@ -376,9 +421,46 @@ const deleteThreads = async (dataDiscussion) => {
             delete moodleData["classRoom"][classroom];
         }
 
-        await chrome.storage.local.set({ moodle: moodleData });
-        launchAlert({error: false, message:"Foro borrado exitósamente"})
+        await saveMoodle(moodleData);
+
+        launchAlert({...alertMessage, error: false, message:"Foro borrado exitósamente"})
     }
 }
+
+// Check messages listener button
+document.getElementById('check-now-btn').addEventListener('click', async () => {
+    await chrome.runtime.sendMessage({ action: "check_now" });
+});
+
+/* ======================================
+   LOCAL STORAGE METHODS
+   ====================================== */
+
+// Moodle
+const saveMoodle = async (newMoodle) => {
+    await chrome.storage.local.set({ moodle: newMoodle });
+}
+
+// Settings
+const saveSettings = async (newSetting) => {
+    await chrome.storage.local.set({ config: newSetting });
+}
+
+/* ======================================
+   HELPERS
+   ====================================== */
+
+// Check empty object
+const isEmptyObject = (obj) => {
+    return Object.keys(obj).length === 0;
+}
+
+const resetForm = (e) => {
+    e.target.reset();
+}
+
+const isInvalid = (value) => {
+    return !value || value.toString().trim().length === 0;
+};
 
 

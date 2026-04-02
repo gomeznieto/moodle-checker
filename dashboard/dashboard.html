@@ -56,7 +56,7 @@
                     <div class="form-container">
                         <form class="form" id="form_setting">
                             <div class="form-content">
-                                <label for="url">URL Base</label>
+                                <label for="url">URL Base <span class="optional form-default-label">Default: https://frgp.cvg.utn.edu.ar</span></label>
                                 <input name="domain" id="url" placeholder="https://moodle.ejemplo.com" />
                             </div>
 
@@ -77,22 +77,22 @@
                     <div class="form-container">
                         <form class="form" id="form-classroom">
                             <div class="form-content">
-                                <label for="classRoomName">Nombre</label>
+                                <label for="classRoomName">Nombre <span class="required form-default-label">Requerido</span></label>
                                 <input name="name" id="classRoomName" placeholder="Ej: Programación III" required />
                             </div>
 
                             <div class="form-content">
-                                <label for="classRoomCode">Código del aula</label>
+                                <label for="classRoomCode">Código del aula <span class="required form-default-label">Requerido</span></label>
                                 <input name="code" id="classRoomCode" placeholder="Ej: 6589" required />
                             </div>
 
                             <div class="form-content">
-                                <label for="classRoomSection">Sección</label>
-                                <input name="section" id="classRoomSection" placeholder="Ej: 457222" />
+                                <label for="classRoomSection">Sección <span class="optional form-default-label">Default: 0</span></label>
+                                <input name="section" id="classRoomSection" placeholder="Ej: 0" />
                             </div>
 
                             <div class="form-content">
-                                <label for="url">URL Base <span>Opcional. Si no se completa se utiliza el URL base.</span></label>
+                                <label for="url">URL Base <span class="optional form-default-label">Default: URL Base</span></label>
                                 <input name="domain" id="url" placeholder="https://moodle.utn.edu.ar" />
                             </div>
 
@@ -107,7 +107,8 @@
             <section id="view-data" class="tab-content">
                 <div class="section-container">
                     <h1 class="title-section">Mensajes</h1>
-                    <div id="alert-main" class="alert-container" style="display:none;"></div>
+                    <div id="alert-main" class="alert-container" style="display:none;">
+                    </div>
                     <div id="moodle-data"></div>
                 </div>
             </section>

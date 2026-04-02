@@ -8,10 +8,12 @@
   --pink: #f5bde6;
   --mauve: #c6a0f6;
   --red: #ed8796;
+  --deep-red: #8D1E22;
   --maroon: #ee99a0;
   --peach: #f5a97f;
   --yellow: #eed49f;
   --green: #a6da95;
+  --deep-green: #145e14;
   --teal: #8bd5ca;
   --sky: #91d7e3;
   --sapphire: #7dc4e4;
@@ -200,21 +202,42 @@ ALERT
 ===================================== */
 
 .alert-container {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 350px;
+    padding: 1.5rem;
+    border-radius: 3px;
     margin-bottom: 1rem;
-    padding: 10px;
-    border-radius: 6px;
     font-size: 0.9rem;
 }
 
 .alert-success {
     background-color: var(--green);
-    color: var(--base);
+    border-left: 4px solid var(--deep-green);
+    color: var(--deep-green);
 }
 
 .alert-error {
-    background-color: var(--red);
-    color: var(--base);
+    background-color: var(--flamingo);
+    border-left: 4px solid var(--deep-red);
+    color: var(--deep-red);
 }
+
+.icon-alert{
+    font-size: 1.2rem;
+    margin-right:0.2rem;
+
+}
+
+/* .alert-error .icon-alert{ */
+/*     color: var(--red); */
+/* } */
+/**/
+/* .alert-success .icon-alert{ */
+/*     color: var(--green); */
+/* } */
 
 /* =====================================
 FORMS
@@ -268,6 +291,18 @@ FORMS
     min-width: 120px;
 }
 
+.form-default-label{
+    font-size: 0.5rem;
+    font-style: italic;
+}
+
+.optional{
+    color: var(--green);
+}
+
+.required{
+    color: var(--red);
+}
 /* =====================================
 BOTONES
 ===================================== */
