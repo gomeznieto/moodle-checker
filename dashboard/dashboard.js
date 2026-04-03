@@ -4,12 +4,13 @@
 
 // Messages
 const renderMainSection = async (moodleData) => {
-
+    launchSpinner(true);
     const dataContent = document.getElementById('moodle-data');
     dataContent.innerHTML = "";
 
     if (!moodleData.classRoom) {
         dataContent.innerHTML = "Aún no hay datos guardados";
+        launchSpinner(false);
         return;
     }
 
@@ -146,6 +147,8 @@ const renderMainSection = async (moodleData) => {
     }
 
     dataContent.appendChild(mainContainer);
+    launchSpinner(false);
+
 }
 
 // ClassRooms
@@ -304,16 +307,19 @@ const launchAlert = ({element, error, message}) => {
     let messageDisplay = '';
     if(!error){
         alert.classList.add("alert-success");
-        messageDisplay = `
+        messageDisplay = `<div class="message-container">
 <i class="icon-alert nf nf-cod-check"></i>
 <span>${message}</span>
+</div>
 `
 
     } else {
         alert.classList.add("alert-error");
         messageDisplay = `
+<div class="message-container">
 <i class="icon-alert nf nf-cod-error"></i>
 <span>${message}</span>
+</div>
 `
     }
 
@@ -369,12 +375,15 @@ chrome.storage.onChanged.addListener(async (changes, namespace) => {
 });
 
 // MENSAJES RECIBIDOS
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
+    const {config: currentConfig} = await chrome.storage.local.get(["config"]) || {};
+
+    console.log(currentConfig)
     if (message.target === 'authenticate') {
         launchAlert({
             element: "alert-main",
             error: true,
-            message: "Necesita iniciar sesión en Moodle", 
+            message: `<p>Necesita iniciar sesión en <a href="${currentConfig.domain}/login" class="link" target="_blank">Moodle<a/></p>`
         });
     }
 
@@ -429,7 +438,9 @@ const deleteThreads = async (dataDiscussion) => {
 
 // Check messages listener button
 document.getElementById('check-now-btn').addEventListener('click', async () => {
+    launchSpinner(true)
     await chrome.runtime.sendMessage({ action: "check_now" });
+    launchSpinner(false)
 });
 
 /* ======================================
@@ -463,4 +474,9 @@ const isInvalid = (value) => {
     return !value || value.toString().trim().length === 0;
 };
 
+const launchSpinner = (turn) => {
+    console.log("Spiner")
+    const container = document.getElementById('loader');
 
+    turn ? container.style.display = 'block' : container.style.display = 'none';
+}
