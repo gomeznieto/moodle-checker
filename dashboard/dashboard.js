@@ -14,26 +14,20 @@ const renderMainSection = async (moodleData) => {
         return;
     }
 
-    // Verificamos si hay mensajes guardados
-    let messages = false;
-
-    for(const classroom of Object.values(moodleData["classRoom"])){
-        for(const forum of Object.values(classroom.forums)){
-            if(forum.newMessages > 0) messages = true;
-        }
-    }
-
-    if(!messages){
+    if(Object.values(moodleData["classRoom"]).length == 0){
         dataContent.innerHTML ="<div class='img-main'><img src='../assets/img/blank_space.png' /></div>" 
     }
-
 
     // Contenedor principal
     const mainContainer = document.createElement("div");
     mainContainer.id = "main-container";
     mainContainer.classList.add("main-container")
+    
+    //Configuraciones
+    const {config: currentConfig} = await chrome.storage.local.get(["config"]);
 
     for (const [classroomId, classRoom] of Object.entries(moodleData.classRoom)) {
+        const blackList = currentConfig.classRoom[classroomId].blackList;
         if (!classRoom.forums) continue;
 
         // Creamos el contenedor del aula
@@ -52,6 +46,10 @@ const renderMainSection = async (moodleData) => {
 
         // Recorremos las aulas
         for (const [forumId, forum] of Object.entries(classRoom.forums || {})) {
+            if(Object.keys(blackList).includes(forumId)){
+               continue; // No guardamos los foros que se encuentran en el blackList
+            }
+
             const threadDiv = document.createElement("div");
             threadDiv.classList.add("forum-container");
             threadDiv.innerHTML = `<h3 class="forum-title">
@@ -59,7 +57,9 @@ const renderMainSection = async (moodleData) => {
                     <i class="nf nf-fa-comments"></i>
                     ${forum.name}
                 </span>
-                <span class="badge bg-silent"
+                <span
+                    id="btn-silent"
+                    class="badge bg-silent"
                     data-classroom="${classroomId}" 
                     data-forum="${forumId}"> 
                     <i class="nf nf-fa-bell_slash"></i>
@@ -74,26 +74,33 @@ const renderMainSection = async (moodleData) => {
 
                 // Summary
                 threadDetail.innerHTML = `
-<summary class="summary-posts">
+<summary 
+    id="summary-posts"
+    class="summary-posts"
+    data-classroom="${classroomId}" 
+    data-forum="${forumId}" 
+    data-discussion="${discussionId}"
+>
     <span>
         <span>${thread.name}</span>
-        <span class="badge bg-new-message">${thread.newMessages || -1}</span>
+        <span class="${ thread.newMessages <= 0 ? 'hide' : 'badge bg-new-message'}">${thread.newMessages > 0 ? thread.newMessages : ''}</span>
     </span>
     <span class="forum-actions">
+        <span 
+            id="btn-read"
+            class="badge fc-read"
+            data-classroom="${classroomId}" 
+            data-forum="${forumId}" 
+            data-discussion="${discussionId}">
+            <i class="nf nf-md-comment_eye_outline"></i>
+        </span>
         <span class="badge fc-delete" 
             id="btn-delete"
             data-classroom="${classroomId}" 
             data-forum="${forumId}" 
-            data-discussion="${discussionId}">
-            <i class="nf nf-fa-trash"></i
-        </span>
-        <span 
-            id="btn-fav"
-            class="badge fc-favorite"
-            data-classroom="${classroomId}" 
-            data-forum="${forumId}" 
-            data-discussion="${discussionId}">
-            <i class="nf nf-fa-star"></i>
+            data-discussion="${discussionId}"
+        >
+            <i class="nf nf-fa-trash"></i>
         </span>
     </span>
 </summary>
@@ -166,10 +173,20 @@ const renderClassRoomSection = async (moodleData) => {
         classroomdiv.innerHTML = `
 <div class="silent-classroom-item">
     <span>${classroom?.name}</span>
-    <span class="badge fc-delete" 
+    <span 
+        class="badge fc-pen" 
         data-classroom="${classroomId}" 
+    >
+        <i class="nf nf-fa-pen"></i>
+    </span>
+
+    <span 
+        class="badge fc-delete" 
+        data-classroom="${classroomId}" 
+    >
         <i class="nf nf-fa-trash"></i>
     </span>
+
 </div>
 `
         sectionDiv.append(classroomdiv);
@@ -178,7 +195,47 @@ const renderClassRoomSection = async (moodleData) => {
 }
 
 // Silent ClassRooms
-const renderSilentClassRoomSection = async (moodleData) => {
+const renderSilentClassRoomSection = async (configData) => {
+    const sectionDiv = document.getElementById("silent-classRooms-Data");
+    sectionDiv.classList.add("silent-container");
+
+    if (Object.values(configData).length == 0) {
+        sectionDiv.innerHTML = "<p>No hay datos guardados.</p>";
+        return;
+    }
+    for(const [classroomId, classroom] of Object.entries(Object.values(configData)[0].classRoom)){
+
+        if(Object.values(Object.values(configData)[0].classRoom[classroomId].blackList).length == 0) continue;
+
+        const silentContainerClassroom = document.createElement("div");
+        silentContainerClassroom.classList.add("silent-classroom");
+
+        const titleClassRoom = document.createElement("h3");
+        titleClassRoom.innerText = classroom.name;
+        titleClassRoom.classList.add("title-silent-classroom");
+
+        silentContainerClassroom.append(titleClassRoom);
+
+        for(const [forumId, forumName] of Object.entries(Object.values(configData)[0].classRoom[classroomId].blackList)){
+            const forumdiv = document.createElement("div");
+            forumdiv.classList.add("silent-forum");
+
+            forumdiv.innerHTML = `
+<div class="silent-classroom-item">
+    <span>${forumName?.name}</span>
+    <span class="badge fc-delete" 
+        data-classroom="${classroomId}" 
+        data-forum="${forumId}"
+    >
+        <i class="nf nf-fa-eye"></i>
+    </span>
+</div>
+`
+            silentContainerClassroom.append(forumdiv);
+        }
+
+        sectionDiv.append(silentContainerClassroom);
+    }
 
 }
 
@@ -292,6 +349,7 @@ document.getElementById('form_setting').addEventListener('submit', async (e) => 
 
 });
 
+
 const refreshIntervaleTIme = (newTime) => {
     const refreshTime = document.getElementById('intervaleTimeMinutes');
     refreshTime.innerText = String(newTime);
@@ -356,14 +414,14 @@ chrome.storage.local.get(["moodle"], async (result) => {
     const moodleData = result.moodle || {};
     const mainSection = renderMainSection(moodleData);
     const classRooms = renderClassRoomSection(moodleData);
-
     Promise.all([mainSection, classRooms]);
 });
 
 // INIT SETTING SECTION
-chrome.storage.local.get(["config"], result => {
+chrome.storage.local.get(["config"], async result => {
     const intervaleTimeMinutes = document.getElementById('intervaleTimeMinutes');
     intervaleTimeMinutes.innerText = `${result.config.checkInterval || '5'} ${result.config.checkInterval > 1 ? ' minutos' : 'minuto'}`;
+    await renderSilentClassRoomSection(result);
 });
 
 // RENDERIZA SI MODIFICAMOS EL LOCAL STORAGE
@@ -378,7 +436,6 @@ chrome.storage.onChanged.addListener(async (changes, namespace) => {
 chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
     const {config: currentConfig} = await chrome.storage.local.get(["config"]) || {};
 
-    console.log(currentConfig)
     if (message.target === 'authenticate') {
         launchAlert({
             element: "alert-main",
@@ -398,12 +455,25 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
 
 // Listener buttons
 document.getElementById('moodle-data').addEventListener('click', async(e) => {
-    const boton = e.target.closest('#btn-delete'); //TODO: especificar que es de discussion
+    const btnDelete = e.target.closest('#btn-delete'); //TODO: especificar que es de discussion
+    const btnUpdate = e.target.closest('#btn-update'); 
+    const unreaMessage = e.target.closest('#btn-read');
+    const silentDiscussion = e.target.closest('#btn-silent');
 
-    if (boton) {
-        const dataDiscussion = boton.dataset;
+    if (btnDelete) {
+        const dataDiscussion = btnDelete.dataset;
         await deleteThreads(dataDiscussion)
+    } else if (btnUpdate){
+        const dataClassroom = btnUpdate.dataset;
+        await updateClassroom(dataClassroom);
+    } else if(unreaMessage){
+        const dataSummaryPost = unreaMessage.dataset;
+        e.preventDefault()
+        cleanMessages(dataSummaryPost);
+    } else if(silentDiscussion){
+        silentForum(silentDiscussion.dataset);
     }
+
 });
 
 // Delete Disussion
@@ -436,12 +506,49 @@ const deleteThreads = async (dataDiscussion) => {
     }
 }
 
+// update classroom TODO:
+const updateClassroom = async (dataClassroom) => {
+
+}
+
+// Messages readed
+const cleanMessages = async (dataSummaryPost) => {
+    const { moodle: moodleData } = await chrome.storage.local.get(["moodle"]);
+    const { classroom, forum, discussion } = dataSummaryPost;
+    const classroomObj = moodleData["classRoom"]?.[classroom];
+    const discussionObj = classroomObj?.forums?.[forum]?.discussions[discussion];
+
+    if(discussionObj.newMessages == 0)
+        return;
+
+    discussionObj.newMessages = 0;
+    saveMoodle(moodleData);
+}
+
+// Bloquear foros
+const silentForum = async (dataForum) => {
+    const { config: configClassRoom } = await chrome.storage.local.get(["config"]);
+    const {moodle: moodleData} = await chrome.storage.local.get("moodle");
+    const { classroom, forum } = dataForum;
+    const forumName = moodleData["classRoom"]?.[classroom]?.forums[forum]?.name;
+
+    configClassRoom.classRoom[classroom].blackList = {
+        ...configClassRoom.classRoom[classroom].blackList,
+        [forum]:{
+            name:forumName 
+        }
+    }
+
+    saveSettings(configClassRoom);
+}
+
 // Check messages listener button
 document.getElementById('check-now-btn').addEventListener('click', async () => {
     launchSpinner(true)
     await chrome.runtime.sendMessage({ action: "check_now" });
     launchSpinner(false)
 });
+
 
 /* ======================================
    LOCAL STORAGE METHODS
@@ -475,8 +582,6 @@ const isInvalid = (value) => {
 };
 
 const launchSpinner = (turn) => {
-    console.log("Spiner")
     const container = document.getElementById('loader');
-
     turn ? container.style.display = 'block' : container.style.display = 'none';
 }

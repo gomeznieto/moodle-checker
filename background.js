@@ -14,6 +14,7 @@ const processMoodle = async (id, name, section, url) => {
         // Tamaño de data
         const currentLentgth = html.length;
         const {moodle : moodleData} = await chrome.storage.local.get(["moodle"]) || {}; // Traemos los datos de localStorage, si no hay lo creamos vacío
+        const {config: currenConfig} = await chrome.storage.local.get(["config"]) || {};
         const lastSize = moodleData.classRoom?.[id]?.lastSize || 0; // Si no tenemos información lo inicializamos en cero
 
         // Verificar Login
@@ -40,7 +41,7 @@ const processMoodle = async (id, name, section, url) => {
                 for (const forum of results){
 
                     // Verificamos si el id está en la black list
-                    if(BLACK_LIST.includes(forum.id)){
+                    if(Object.values(currenConfig.classRoom[id].blackList).includes(forum.id)){
                         continue;
                     }
 
