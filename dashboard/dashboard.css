@@ -33,6 +33,7 @@
     --surface1: #494d64;
     --surface0: #363a4f;
     --base: #24273a;
+    --mantle2: #292c3c;
     --mantle: #1e2030;
     --crust: #181926;
 }
@@ -218,19 +219,70 @@ SECTIONS MAIN
  SECTION SILENT FORUM
 ===================================== */
 .silent-container{
-
+    padding: 0.5rem;
+    border-radius: 6px;
+    background-color: var(--mantle);
+    overflow: hidden;
 }
 
+.title-silent-classroom{
+    margin: 0.5rem 0rem;
+}
+
+.silent-classroom-item{
+    font-size: 0.9rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--base);
+    padding: 0.3rem;
+    border-radius: 6px;
+}
+
+.silent-classroom-item:hover{
+    background-color: var(--mantle2);
+    border: 1px solid var(--surface2);
+}
+
+.silent-classroom-item span{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
 
 /* =====================================
 SECTIONS CLASSROOM LIST
 ===================================== */
+.classRooms-container{
+    border-radius: 6px;
+    padding: 0.5rem;
+    background-color: var(--mantle);
+    overflow: hidden;
+}
 
 .classroom-item{
-   display: inline-flex;
-   align-items: center;
-   justify-content:center;
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    font-size: 0.9rem;
+    font-weight: bold;
+    border-bottom: 1px solid var(--base);
+    padding: 0.3rem;
+    border-radius: 6px;
 }
+
+.classroom-item:hover{
+    background-color: var(--mantle2);
+    border: 1px solid var(--surface2);
+}
+
+.classroom-item span{
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
 
 /* =====================================
 ALERT
@@ -397,7 +449,7 @@ ACTIONS
 }
 
 .bg-silent {
-    background-color: var(--sky);
+    background-color: var(--surface2);
     color: var(--crust);
 }
 
@@ -408,30 +460,34 @@ ACTIONS
 
 .fc-delete {
     color: var(--red);
-    font-size: 0.7rem!important;
+    font-size: 1rem!important;
 }
 
 .fc-read {
     color: var(--yellow);
+    font-size: 1rem!important;
 }
 
 .fc-silent {
     color: var(--sky);
+    font-size: 1rem!important;
 }
 
 .fc-new-message {
     color: var(--text);
+    font-size: 1rem!important;
 }
 
 .fc-pen{
-    color: var(--overlay2);
-    font-size: 0.7rem!important;
+    color: var(--sapphire);
+    font-size: 1rem!important;
 }
 
 .fc-circle{
     color: var(--pink);
-    font-size: 0.3rem!important;
+    font-size: 0.4rem!important;
 }
+
 
 
 /* =====================================
@@ -472,6 +528,7 @@ FORUM
     width: 100%;
     display: inline-flex;
     justify-content: space-between;
+    align-items: center;
 }
 
 .summary-posts {
@@ -479,11 +536,12 @@ FORUM
     display: inline-flex;
     justify-content: space-between;
     align-items: center;
-    font-size: 0.8rem;
+    font-size: 0.9rem;
     cursor: pointer;
-    font-weight: bold;
     margin-left: 0.5rem;
-    border-bottom: 1px solid var(--surface0);
+    border-bottom: 1px solid var(--base);
+    padding: 0rem 0.5rem;
+    border-radius: 6px;
 }
 
 
@@ -491,6 +549,11 @@ FORUM
     display: inline-flex;
     justify-content: space-between;
     align-items: center;
+}
+
+.summary-posts:hover{
+    border: 1px solid var(--surface2);
+    background-color: var(--mantle2);
 }
 
 /* =====================================
@@ -565,11 +628,23 @@ BADGES
     display: inline-flex;
     justify-content: center;
     align-items: center;
-    font-size: 0.8rem;
+    font-size: 1rem;
     line-height: 0.7;
-    border-radius: 50%;
-    padding: 0.2rem;
-    margin-left: 5px;
+    padding: 0.4rem;
+    margin: 0.2rem 0.4rem 0.2rem 0rem;
+    cursor: pointer;
+    color: var(--text)!important;
+}
+
+.badge:hover{
+    border-radius: 6px;
+    background-color: var(--surface2);
+
+}
+
+.read-message{
+    margin-left: 1rem;
+    font-size: 0.8rem;
 }
 
 /* =====================================

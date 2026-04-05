@@ -5,6 +5,8 @@
 // Messages
 const renderMainSection = async (moodleData) => {
     launchSpinner(true);
+
+    const configData = await getConfig();
     const dataContent = document.getElementById('moodle-data');
     dataContent.innerHTML = "";
 
@@ -14,6 +16,7 @@ const renderMainSection = async (moodleData) => {
         return;
     }
 
+    // No hay mensajes.
     if(Object.values(moodleData["classRoom"]).length == 0){
         dataContent.innerHTML ="<div class='img-main'><img src='../assets/img/blank_space.png' /></div>" 
     }
@@ -23,8 +26,6 @@ const renderMainSection = async (moodleData) => {
     mainContainer.id = "main-container";
     mainContainer.classList.add("main-container")
     
-    //Configuraciones
-    const configData = await getConfig();
 
     for (const [classroomId, classRoom] of Object.entries(moodleData.classRoom)) {
         const blackList = configData.classRoom[classroomId].blackList;
@@ -59,7 +60,7 @@ const renderMainSection = async (moodleData) => {
                 </span>
                 <span
                     id="btn-silent"
-                    class="badge bg-silent"
+                    class="badge fc-silent"
                     data-classroom="${classroomId}" 
                     data-forum="${forumId}"> 
                     <i class="nf nf-fa-bell_slash"></i>
@@ -84,6 +85,7 @@ const renderMainSection = async (moodleData) => {
     <span>
         <span>${thread.name}</span>
         <span class="${ thread.newMessages <= 0 ? 'hide' : 'badge bg-new-message'}">${thread.newMessages > 0 ? thread.newMessages : ''}</span>
+        <i class="read-message nf nf-md-arrow_down_right"></i>
     </span>
     <span class="forum-actions">
         <span 
@@ -160,7 +162,7 @@ const renderMainSection = async (moodleData) => {
 
 // ClassRooms
 const renderClassRoomSection = async (configData) => {
-    
+
     if (Object.values(configData?.classRoom).length == 0) {
         sectionDiv.innerHTML = "<p>No hay aulas guardas.</p>";
         return;
@@ -173,31 +175,35 @@ const renderClassRoomSection = async (configData) => {
         const classroomdiv = document.createElement("div");
 
         classroomdiv.innerHTML = `
-        <div class="classroom-item">
-            <span 
-                class="badge fc-circle" 
-            >
-                <i class="nf nf-fa-circle"></i>
-            </span>
+<div class="classroom-item">
+    <span>
+        <span 
+            class="badge fc-circle" 
+        >
+            <i class="nf nf-fa-circle"></i>
+        </span>
 
-            <span>${classroom?.name}</span>
-            <span 
-                class="badge fc-pen" 
-                id="btn-edit-classroom"
-                data-classroom="${classroomId}" 
-            >
-                <i class="nf nf-fa-pen"></i>
-            </span>
+        <span>${classroom?.name}</span>
+    </span>
+    <span>
+        <span 
+            class="badge fc-pen" 
+            id="btn-edit-classroom"
+            data-classroom="${classroomId}" 
+        >
+            <i class="nf nf-fa-pen"></i>
+        </span>
 
-            <span 
-                class="badge fc-delete" 
-                data-classroom="${classroomId}" 
-            >
-                <i class="nf nf-fa-trash"></i>
-            </span>
+        <span 
+            class="badge fc-delete" 
+            data-classroom="${classroomId}" 
+        >
+            <i class="nf nf-fa-trash"></i>
+        </span>
+    </span>
 
-        </div>
-        `
+</div>
+`
         sectionDiv.append(classroomdiv);
     }
 
@@ -234,7 +240,12 @@ const renderSilentClassRoomSection = async (configData) => {
 
             forumdiv.innerHTML = `
 <div class="silent-classroom-item">
-    <span>${forumName?.name}</span>
+    <span>
+        <span class="badge fc-circle">
+            <i class="nf nf-fa-circle"></i>
+        </span>
+        <span>${forumName?.name}</span>
+    </span>
     <span 
         id="btn-unblock"
         class="badge fc-delete" 
@@ -303,7 +314,7 @@ document.getElementById('form-classroom').addEventListener('submit', async e => 
     if (isInvalid(section) && isNaN(parseInt(section))) {
         alertMessage.error = true;
         alertMessage.message = "El código no fue completado o no tiene el estilo correcto: solo números"; 
-} 
+    } 
 
     const updatedConfig = {
         ...configData,
@@ -469,7 +480,7 @@ chrome.storage.onChanged.addListener(async (changes, namespace) => {
 
 // MENSAJES RECIBIDOS
 chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
-        const  configData = await getConfig();
+    const  configData = await getConfig();
 
     if (message.target === 'authenticate') {
         launchAlert({
@@ -546,8 +557,6 @@ const unblockForum = async dataUnblock => {
 
         await saveSettings(configData);
         await renderMainSection(moodleData);
-
-        console.log(`Foro ${forum} desbloqueado de la comisión ${classroom}`);
     }
 
 }
@@ -641,7 +650,11 @@ const silentForum = async (dataForum) => {
         }
     }
 
+    // borrar los mensajes que estén guardados con este code
+    delete moodleData["classRoom"]?.[classroom]?.forums[forum];
+
     saveSettings(configData);
+    saveMoodle(moodleData);
     await renderMainSection(moodleData);
 }
 
