@@ -176,7 +176,7 @@ MENU
 }
 
 /* =====================================
-SECTIONS
+SECTIONS MAIN
 ===================================== */
 .section-header {
     position: sticky;
@@ -215,10 +215,21 @@ SECTIONS
 
 
 /* =====================================
- SILENT 
+ SECTION SILENT FORUM
 ===================================== */
 .silent-container{
 
+}
+
+
+/* =====================================
+SECTIONS CLASSROOM LIST
+===================================== */
+
+.classroom-item{
+   display: inline-flex;
+   align-items: center;
+   justify-content:center;
 }
 
 /* =====================================
@@ -324,6 +335,12 @@ FORMS
     font-style: italic;
 }
 
+.button-form-add-classroom{
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+}
+
 .optional {
     color: var(--green);
 }
@@ -391,6 +408,7 @@ ACTIONS
 
 .fc-delete {
     color: var(--red);
+    font-size: 0.7rem!important;
 }
 
 .fc-read {
@@ -407,6 +425,12 @@ ACTIONS
 
 .fc-pen{
     color: var(--overlay2);
+    font-size: 0.7rem!important;
+}
+
+.fc-circle{
+    color: var(--pink);
+    font-size: 0.3rem!important;
 }
 
 
@@ -559,7 +583,7 @@ IMAGE
 }
 
 /* =====================================
- SPINNER
+SPINNER
 ===================================== */
 
 .loader-container {
@@ -588,54 +612,54 @@ IMAGE
     0%,
     100% {
         box-shadow: 0 -3em 0 0.2em,
-            2em -2em 0 0em, 3em 0 0 -1em,
-            2em 2em 0 -1em, 0 3em 0 -1em,
-            -2em 2em 0 -1em, -3em 0 0 -1em,
-            -2em -2em 0 0;
+        2em -2em 0 0em, 3em 0 0 -1em,
+        2em 2em 0 -1em, 0 3em 0 -1em,
+        -2em 2em 0 -1em, -3em 0 0 -1em,
+        -2em -2em 0 0;
     }
 
     12.5% {
         box-shadow: 0 -3em 0 0, 2em -2em 0 0.2em,
-            3em 0 0 0, 2em 2em 0 -1em, 0 3em 0 -1em,
-            -2em 2em 0 -1em, -3em 0 0 -1em,
-            -2em -2em 0 -1em;
+        3em 0 0 0, 2em 2em 0 -1em, 0 3em 0 -1em,
+        -2em 2em 0 -1em, -3em 0 0 -1em,
+        -2em -2em 0 -1em;
     }
 
     25% {
         box-shadow: 0 -3em 0 -0.5em,
-            2em -2em 0 0, 3em 0 0 0.2em,
-            2em 2em 0 0, 0 3em 0 -1em,
-            -2em 2em 0 -1em, -3em 0 0 -1em,
-            -2em -2em 0 -1em;
+        2em -2em 0 0, 3em 0 0 0.2em,
+        2em 2em 0 0, 0 3em 0 -1em,
+        -2em 2em 0 -1em, -3em 0 0 -1em,
+        -2em -2em 0 -1em;
     }
 
     37.5% {
         box-shadow: 0 -3em 0 -1em, 2em -2em 0 -1em,
-            3em 0em 0 0, 2em 2em 0 0.2em, 0 3em 0 0em,
-            -2em 2em 0 -1em, -3em 0em 0 -1em, -2em -2em 0 -1em;
+        3em 0em 0 0, 2em 2em 0 0.2em, 0 3em 0 0em,
+        -2em 2em 0 -1em, -3em 0em 0 -1em, -2em -2em 0 -1em;
     }
 
     50% {
         box-shadow: 0 -3em 0 -1em, 2em -2em 0 -1em,
-            3em 0 0 -1em, 2em 2em 0 0em, 0 3em 0 0.2em,
-            -2em 2em 0 0, -3em 0em 0 -1em, -2em -2em 0 -1em;
+        3em 0 0 -1em, 2em 2em 0 0em, 0 3em 0 0.2em,
+        -2em 2em 0 0, -3em 0em 0 -1em, -2em -2em 0 -1em;
     }
 
     62.5% {
         box-shadow: 0 -3em 0 -1em, 2em -2em 0 -1em,
-            3em 0 0 -1em, 2em 2em 0 -1em, 0 3em 0 0,
-            -2em 2em 0 0.2em, -3em 0 0 0, -2em -2em 0 -1em;
+        3em 0 0 -1em, 2em 2em 0 -1em, 0 3em 0 0,
+        -2em 2em 0 0.2em, -3em 0 0 0, -2em -2em 0 -1em;
     }
 
     75% {
         box-shadow: 0em -3em 0 -1em, 2em -2em 0 -1em,
-            3em 0em 0 -1em, 2em 2em 0 -1em, 0 3em 0 -1em,
-            -2em 2em 0 0, -3em 0em 0 0.2em, -2em -2em 0 0;
+        3em 0em 0 -1em, 2em 2em 0 -1em, 0 3em 0 -1em,
+        -2em 2em 0 0, -3em 0em 0 0.2em, -2em -2em 0 0;
     }
 
     87.5% {
         box-shadow: 0em -3em 0 0, 2em -2em 0 -1em,
-            3em 0 0 -1em, 2em 2em 0 -1em, 0 3em 0 -1em,
-            -2em 2em 0 0, -3em 0em 0 0, -2em -2em 0 0.2em;
+        3em 0 0 -1em, 2em 2em 0 -1em, 0 3em 0 -1em,
+        -2em 2em 0 0, -3em 0em 0 0, -2em -2em 0 0.2em;
     }
 }

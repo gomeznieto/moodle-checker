@@ -24,10 +24,10 @@ const renderMainSection = async (moodleData) => {
     mainContainer.classList.add("main-container")
     
     //Configuraciones
-    const {config: currentConfig} = await chrome.storage.local.get(["config"]);
+    const configData = await getConfig();
 
     for (const [classroomId, classRoom] of Object.entries(moodleData.classRoom)) {
-        const blackList = currentConfig.classRoom[classroomId].blackList;
+        const blackList = configData.classRoom[classroomId].blackList;
         if (!classRoom.forums) continue;
 
         // Creamos el contenedor del aula
@@ -39,7 +39,7 @@ const renderMainSection = async (moodleData) => {
         titleSection.classList.add("classroom-header");
         titleSection.innerHTML = `
 <h2>
-    <span class="title-classroom">${classRoom.name || "Sin Nonbre"}</span>
+    <span class="title-classroom">${configData.classRoom[classroomId].name || "Sin Nonbre"}</span>
 </h2>
 `;
         divClassRoom.appendChild(titleSection);
@@ -159,36 +159,45 @@ const renderMainSection = async (moodleData) => {
 }
 
 // ClassRooms
-const renderClassRoomSection = async (moodleData) => {
-    const sectionDiv = document.getElementById("classRooms-Data"); 
-
-    if (!moodleData.classRoom) {
-        sectionDiv.innerHTML = "<p>No hay datos guardados.</p>";
+const renderClassRoomSection = async (configData) => {
+    
+    if (Object.values(configData?.classRoom).length == 0) {
+        sectionDiv.innerHTML = "<p>No hay aulas guardas.</p>";
         return;
     }
 
-    for(const [classroomId, classroom] of Object.entries(moodleData.classRoom)){
+    const sectionDiv = document.getElementById("classRooms-Data"); 
+    sectionDiv.innerHTML = '';
+
+    for(const [classroomId, classroom] of Object.entries(configData?.classRoom)){
         const classroomdiv = document.createElement("div");
 
         classroomdiv.innerHTML = `
-<div class="silent-classroom-item">
-    <span>${classroom?.name}</span>
-    <span 
-        class="badge fc-pen" 
-        data-classroom="${classroomId}" 
-    >
-        <i class="nf nf-fa-pen"></i>
-    </span>
+        <div class="classroom-item">
+            <span 
+                class="badge fc-circle" 
+            >
+                <i class="nf nf-fa-circle"></i>
+            </span>
 
-    <span 
-        class="badge fc-delete" 
-        data-classroom="${classroomId}" 
-    >
-        <i class="nf nf-fa-trash"></i>
-    </span>
+            <span>${classroom?.name}</span>
+            <span 
+                class="badge fc-pen" 
+                id="btn-edit-classroom"
+                data-classroom="${classroomId}" 
+            >
+                <i class="nf nf-fa-pen"></i>
+            </span>
 
-</div>
-`
+            <span 
+                class="badge fc-delete" 
+                data-classroom="${classroomId}" 
+            >
+                <i class="nf nf-fa-trash"></i>
+            </span>
+
+        </div>
+        `
         sectionDiv.append(classroomdiv);
     }
 
@@ -196,16 +205,19 @@ const renderClassRoomSection = async (moodleData) => {
 
 // Silent ClassRooms
 const renderSilentClassRoomSection = async (configData) => {
-    const sectionDiv = document.getElementById("silent-classRooms-Data");
-    sectionDiv.classList.add("silent-container");
 
-    if (Object.values(configData).length == 0) {
-        sectionDiv.innerHTML = "<p>No hay datos guardados.</p>";
+    if (Object.values(configData?.classRoom).length == 0) {
+        sectionDiv.innerHTML = "<p>No hay foros bloqueados.</p>";
         return;
     }
-    for(const [classroomId, classroom] of Object.entries(Object.values(configData)[0].classRoom)){
 
-        if(Object.values(Object.values(configData)[0].classRoom[classroomId].blackList).length == 0) continue;
+    const sectionDiv = document.getElementById("silent-classRooms-Data");
+    sectionDiv.classList.add("silent-container");
+    sectionDiv.innerHTML = '';
+
+    for(const [classroomId, classroom] of Object.entries(configData.classRoom)){
+
+        if(Object.values(configData.classRoom[classroomId].blackList).length == 0) continue;
 
         const silentContainerClassroom = document.createElement("div");
         silentContainerClassroom.classList.add("silent-classroom");
@@ -216,14 +228,16 @@ const renderSilentClassRoomSection = async (configData) => {
 
         silentContainerClassroom.append(titleClassRoom);
 
-        for(const [forumId, forumName] of Object.entries(Object.values(configData)[0].classRoom[classroomId].blackList)){
+        for(const [forumId, forumName] of Object.entries(configData.classRoom[classroomId].blackList)){
             const forumdiv = document.createElement("div");
             forumdiv.classList.add("silent-forum");
 
             forumdiv.innerHTML = `
 <div class="silent-classroom-item">
     <span>${forumName?.name}</span>
-    <span class="badge fc-delete" 
+    <span 
+        id="btn-unblock"
+        class="badge fc-delete" 
         data-classroom="${classroomId}" 
         data-forum="${forumId}"
     >
@@ -247,6 +261,7 @@ const renderSilentClassRoomSection = async (configData) => {
 // Add classrooms 
 document.getElementById('form-classroom').addEventListener('submit', async e => {
     e.preventDefault();
+    const {mode} = document.getElementById('btn_classRoom').dataset;
 
     let alertMessage = {
         element: "alert-classroom",
@@ -256,7 +271,7 @@ document.getElementById('form-classroom').addEventListener('submit', async e => 
 
     // Datos formulario
     const formData = new FormData(e.target);
-    const {config : currentConfig} = await chrome.storage.local.get(["config"]) || {};
+    const configData = await getConfig();
 
     const domainOptional = formData.get('domain');
     const name = formData.get('name');
@@ -270,27 +285,35 @@ document.getElementById('form-classroom').addEventListener('submit', async e => 
     } 
 
     // Verificamos si el código existe evitando crash si classRoom es undefined
-    const classrooms = currentConfig.classRoom || {};
+    // Verificamos el modo
+    const classrooms = configData.classRoom || {};
+
     if (Object.values(classrooms).includes(parseInt(code))) {
-        alertMessage.error = true;
-        alertMessage.message = "El código del aula ya existe en su base de datos";
+
+        // Error al intentar gaurdar un código existente
+        if(mode == 'save'){
+            alertMessage.error = true;
+            alertMessage.message = "El código del aula ya existe en su base de datos";
+        }
+
+        launchAlert(alertMessage);
+        return;
     }
 
-    //TODO: Probar
     if (isInvalid(section) && isNaN(parseInt(section))) {
         alertMessage.error = true;
         alertMessage.message = "El código no fue completado o no tiene el estilo correcto: solo números"; 
-    } 
+} 
 
     const updatedConfig = {
-        ...currentConfig,
+        ...configData,
         classRoom: {
-            ...(currentConfig.classRoom || {}),
+            ...(configData.classRoom || {}),
             [code]: {
-                domainOptional: domainOptional || currentConfig.domain || "Sin Dominio", 
-                name: name || "Sin Nombre",
-                section: section || 0,
-                blackList: {} 
+                domainOptional: domainOptional || configData.classRoom[code].OprionalDomain || configData.domain || "Sin Dominio", 
+                name: name || configData.classRoom[code].name || "Sin Nombre",
+                section: section || configData.classRoom[code].section || 0,
+                blackList: configData.blackList || configData.classRoom[code].blackList || {} 
             }
         }
     };
@@ -301,7 +324,9 @@ document.getElementById('form-classroom').addEventListener('submit', async e => 
     }
 
     // Lanzamos alerta de éxito o error
+    alertMessage.message = `El aula se ${mode == 'save' ? 'guardó' :  'editó'} correctamente`;
     launchAlert(alertMessage);
+
 });
 
 // Settings 
@@ -309,7 +334,7 @@ document.getElementById('form_setting').addEventListener('submit', async (e) => 
     e.preventDefault();
 
     // Recuperamos datos de setting de LocalStorage
-    const {config: currentConfig} = await chrome.storage.local.get(["config"]) || {};
+    const configData = await getConfig();
 
     // Onjeto de mensaje
     let alertMessage = {
@@ -330,9 +355,9 @@ document.getElementById('form_setting').addEventListener('submit', async (e) => 
 
     // Nuevo objeto para guardar
     const updatedConfig = {
-        ...currentConfig,
-        domain: domain || currentConfig.domain,
-        checkInterval: parseInt(timeInterval) || currentConfig?.checkInterval || 30,
+        ...configData,
+        domain: domain || configData.domain,
+        checkInterval: parseInt(timeInterval) || configData?.checkInterval || 30,
     };
 
     // Guardamos información en Local Storage
@@ -348,7 +373,6 @@ document.getElementById('form_setting').addEventListener('submit', async (e) => 
     launchAlert({...alertMessage, error: false, message: "La información se guardó correctamente."});
 
 });
-
 
 const refreshIntervaleTIme = (newTime) => {
     const refreshTime = document.getElementById('intervaleTimeMinutes');
@@ -413,34 +437,45 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 chrome.storage.local.get(["moodle"], async (result) => {
     const moodleData = result.moodle || {};
     const mainSection = renderMainSection(moodleData);
-    const classRooms = renderClassRoomSection(moodleData);
-    Promise.all([mainSection, classRooms]);
+
+    Promise.all([mainSection]);
 });
 
 // INIT SETTING SECTION
 chrome.storage.local.get(["config"], async result => {
     const intervaleTimeMinutes = document.getElementById('intervaleTimeMinutes');
-    intervaleTimeMinutes.innerText = `${result.config.checkInterval || '5'} ${result.config.checkInterval > 1 ? ' minutos' : 'minuto'}`;
-    await renderSilentClassRoomSection(result);
+    const configData = result.config || {};
+
+    intervaleTimeMinutes.innerText = `${configData.checkInterval || '5'} ${result.config.checkInterval > 1 ? ' minutos' : 'minuto'}`;
+    const silenClassroom =  renderSilentClassRoomSection(configData);
+    const classRooms = renderClassRoomSection(configData);
+
+    Promise.all([silenClassroom, classRooms]);
 });
 
 // RENDERIZA SI MODIFICAMOS EL LOCAL STORAGE
 chrome.storage.onChanged.addListener(async (changes, namespace) => {
     if (namespace === 'local' && changes.moodle) {
-        const { moodle: moodleData } = await chrome.storage.local.get(["moodle"]);
+        const moodleData = await getMoodle();
+
         await renderMainSection(moodleData);
+    } else if (namespace === 'local' && changes.config) {
+        const  configData = await getConfig();
+
+        await renderClassRoomSection(configData);
+        await renderSilentClassRoomSection(configData);
     }
 });
 
 // MENSAJES RECIBIDOS
 chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
-    const {config: currentConfig} = await chrome.storage.local.get(["config"]) || {};
+        const  configData = await getConfig();
 
     if (message.target === 'authenticate') {
         launchAlert({
             element: "alert-main",
             error: true,
-            message: `<p>Necesita iniciar sesión en <a href="${currentConfig.domain}/login" class="link" target="_blank">Moodle<a/></p>`
+            message: `<p>Necesita iniciar sesión en <a href="${configData.domain}/login" class="link" target="_blank">Moodle<a/></p>`
         });
     }
 
@@ -453,7 +488,7 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
    ACTIONS BUTTONS
    ====================================== */
 
-// Listener buttons
+// Botones Sección Mensajes
 document.getElementById('moodle-data').addEventListener('click', async(e) => {
     const btnDelete = e.target.closest('#btn-delete'); //TODO: especificar que es de discussion
     const btnUpdate = e.target.closest('#btn-update'); 
@@ -472,13 +507,84 @@ document.getElementById('moodle-data').addEventListener('click', async(e) => {
         cleanMessages(dataSummaryPost);
     } else if(silentDiscussion){
         silentForum(silentDiscussion.dataset);
+    } 
+});
+
+// Botones Sección Lista de Aulas
+document.getElementById('classRooms-Data').addEventListener('click', async e => {
+
+    const btnEditClassroom = e.target.closest('#btn-edit-classroom');
+
+    if(btnEditClassroom){
+        const dataClassroom = btnEditClassroom.dataset;
+        await editClassRoom(dataClassroom);
     }
 
-});
+})
+
+//
+document.getElementById('silent-classRooms-Data').addEventListener('click', async e => {
+
+    const btnunblockClassroom = e.target.closest('#btn-unblock');
+
+    if(btnunblockClassroom){
+        const dataUnblock = btnunblockClassroom.dataset;
+        await unblockForum(dataUnblock);
+    }
+})
+
+// Unblock Forum
+const unblockForum = async dataUnblock => {
+    const {classroom, forum} = dataUnblock;
+
+    const configData = await getConfig();
+    const moodleData = await getMoodle();
+
+    if (configData?.classRoom?.[classroom]?.blackList) {
+
+        delete configData.classRoom[classroom].blackList[forum];
+
+        await saveSettings(configData);
+        await renderMainSection(moodleData);
+
+        console.log(`Foro ${forum} desbloqueado de la comisión ${classroom}`);
+    }
+
+}
+
+// Edit ClassRoom
+const editClassRoom = async (dataClassroom) => {
+    // Traemos los datos del aula
+    const configData = await getConfig();
+
+    // Classroom Id
+    const {classroom} = dataClassroom;
+
+    const classroomName = configData.classRoom[classroom].name;
+    const classroomCode = classroom;
+    const classroomSection = configData.classRoom[classroom].section;
+    const classroomDomain = configData.classRoom[classroom].domainOptional;
+
+    document.getElementById('classRoomName').value = classroomName;
+    document.getElementById('classRoomCode').value = classroomCode;
+    document.getElementById('classRoomCode').readOnly = true;
+    document.getElementById('classRoomSection').value = classroomSection;
+    document.getElementById('classRoomDomain').value = classroomDomain;
+
+    // Mostramos el formulario
+    document.getElementById('view-addClassRooms').style.display = 'block';
+
+    // Cerramos el listado de aulas:
+    document.getElementById('view-classRooms').style.display = 'none';
+
+    // cambiamos el mode en Formlario de agregado a Edit
+    document.getElementById('btn_classRoom').dataset.mode = 'edit';
+}
 
 // Delete Disussion
 const deleteThreads = async (dataDiscussion) => {
-    const { moodle: moodleData } = await chrome.storage.local.get(["moodle"]);
+    const moodleData = await getMoodle();
+
     const { classroom, forum, discussion } = dataDiscussion;
     const classroomObj = moodleData["classRoom"]?.[classroom];
     const forumObj = classroomObj?.forums?.[forum];
@@ -506,14 +612,9 @@ const deleteThreads = async (dataDiscussion) => {
     }
 }
 
-// update classroom TODO:
-const updateClassroom = async (dataClassroom) => {
-
-}
-
 // Messages readed
 const cleanMessages = async (dataSummaryPost) => {
-    const { moodle: moodleData } = await chrome.storage.local.get(["moodle"]);
+    const moodleData = await getMoodle();
     const { classroom, forum, discussion } = dataSummaryPost;
     const classroomObj = moodleData["classRoom"]?.[classroom];
     const discussionObj = classroomObj?.forums?.[forum]?.discussions[discussion];
@@ -527,19 +628,21 @@ const cleanMessages = async (dataSummaryPost) => {
 
 // Bloquear foros
 const silentForum = async (dataForum) => {
-    const { config: configClassRoom } = await chrome.storage.local.get(["config"]);
-    const {moodle: moodleData} = await chrome.storage.local.get("moodle");
+    const configData = await getConfig();
+    const moodleData = await getMoodle();
+
     const { classroom, forum } = dataForum;
     const forumName = moodleData["classRoom"]?.[classroom]?.forums[forum]?.name;
 
-    configClassRoom.classRoom[classroom].blackList = {
-        ...configClassRoom.classRoom[classroom].blackList,
+    configData.classRoom[classroom].blackList = {
+        ...configData.classRoom[classroom].blackList,
         [forum]:{
             name:forumName 
         }
     }
 
-    saveSettings(configClassRoom);
+    saveSettings(configData);
+    await renderMainSection(moodleData);
 }
 
 // Check messages listener button
@@ -563,6 +666,17 @@ const saveMoodle = async (newMoodle) => {
 const saveSettings = async (newSetting) => {
     await chrome.storage.local.set({ config: newSetting });
 }
+
+const getMoodle = async () => {
+    const  {moodle: moodleData} = await chrome.storage.local.get("moodle") || {};
+    return moodleData;
+}
+
+const getConfig = async () => {
+    const  {config: configData} = await chrome.storage.local.get("config") || {};
+    return configData;
+}
+
 
 /* ======================================
    HELPERS
