@@ -195,6 +195,7 @@ SECTIONS MAIN
     font-size: 1.3rem;
     margin-bottom: 1rem;
     margin-left: 0.5rem;
+    letter-spacing: 0.5px;
 }
 
 .section-container {
@@ -216,7 +217,7 @@ SECTIONS MAIN
 
 
 /* =====================================
- SECTION SILENT FORUM
+SECTION SILENT FORUM
 ===================================== */
 .silent-container{
     padding: 0.5rem;
@@ -236,7 +237,7 @@ SECTIONS MAIN
     align-items: center;
     border-bottom: 1px solid var(--base);
     padding: 0.3rem;
-    border-radius: 6px;
+    border-radius: 8px;
 }
 
 .silent-classroom-item:hover{
@@ -269,7 +270,7 @@ SECTIONS CLASSROOM LIST
     font-weight: bold;
     border-bottom: 1px solid var(--base);
     padding: 0.3rem;
-    border-radius: 6px;
+    border-radius: 8px;
 }
 
 .classroom-item:hover{
@@ -360,9 +361,9 @@ FORMS
     background-color: var(--surface0);
     border: 1px solid var(--surface1);
     color: var(--text);
-    padding: 10px 12px;
+    padding: 0.3rem 0.5rem;
     border-radius: 6px;
-    font-size: 0.95rem;
+    font-size: 0.9rem;
     outline: none;
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
@@ -385,6 +386,7 @@ FORMS
 .form-default-label {
     font-size: 0.5rem;
     font-style: italic;
+    letter-spacing: 0.5px;
 }
 
 .button-form-add-classroom{
@@ -455,7 +457,7 @@ ACTIONS
 
 .bg-new-message {
     background-color: var(--rosewater);
-    color: var(--crust);
+    color: var(--crust)!important;
 }
 
 .fc-delete {
@@ -622,7 +624,7 @@ POSTS
 /* =====================================
 BADGES 
 ===================================== */
-
+.badge-new-message,
 .badge {
     aspect-ratio: 1 / 1;
     display: inline-flex;
@@ -645,6 +647,14 @@ BADGES
 .read-message{
     margin-left: 1rem;
     font-size: 0.8rem;
+}
+
+.badge-new-message{
+    color: var(--mantle)!important;
+    border-radius:  50%;
+    margin-left: 0.5rem;
+    padding: 0.2rem;
+    font-size: 0.9rem;
 }
 
 /* =====================================

@@ -1,5 +1,3 @@
-const BLACK_LIST=[]; //TODO: Traer black list desde config
-
 /* ==================================================
     PROCESO DE RECOLECCION DE DATOS
    ================================================== */
@@ -13,9 +11,9 @@ const processMoodle = async (id, name, section, url) => {
 
         // Tamaño de data
         const currentLentgth = html.length;
-        const {moodle : moodleData} = await chrome.storage.local.get(["moodle"]) || {}; // Traemos los datos de localStorage, si no hay lo creamos vacío
+        let {moodle : moodleData} = await chrome.storage.local.get(["moodle"]) || {}; // Traemos los datos de localStorage, si no hay lo creamos vacío
         const {config: currenConfig} = await chrome.storage.local.get(["config"]) || {};
-        const lastSize = moodleData.classRoom?.[id]?.lastSize || 0; // Si no tenemos información lo inicializamos en cero
+        const lastSize = moodleData?.classRoom?.[id]?.lastSize || 0; // Si no tenemos información lo inicializamos en cero
 
         // Verificar Login
         if(html.includes("login-form") || html.includes("login-container") || currentLentgth == 0){
@@ -24,7 +22,9 @@ const processMoodle = async (id, name, section, url) => {
         }
 
         // Solo leemos si hay cambios en el fetch de datos
-        if(currentLentgth != lastSize){
+        // if(currentLentgth != lastSize){
+        if(true){
+            if (!moodleData) moodleData = {};
             if (!moodleData.classRoom) moodleData.classRoom = {}; // Si no hay aulas guardadas, se crea vacío
             if (!moodleData.classRoom[id]) moodleData.classRoom[id] = { forums: {}, name: name, section: section }; // Si el aula a leer no tiene datos guardados, se crea vacío
 
@@ -35,7 +35,7 @@ const processMoodle = async (id, name, section, url) => {
             // Si hay nuevos mensajes
             if (html.includes("rounded-pill") || html.includes("unread")) {
 
-                const results = await parserOffscreen({target: 'offscreen_forum', data: html}); // Se parsea los datos en offscreen con métodos DOM
+                const results = await parserOffscreen({target: 'offscreen_forum', data: html}) || []; // Se parsea los datos en offscreen con métodos DOM
 
                 // Recorremos los foros con mensajes nuevos
                 for (const forum of results){
@@ -228,7 +228,7 @@ chrome.runtime.onInstalled.addListener(async () => {
     const defaultConfig = {
         domain: urlBaseDefault,
         checkInterval: timeDefault,
-        classRooms: {}
+        classRoom: {}
     };
 
     if (!config) { // Si aún no hay configuración, guardamos datos por default

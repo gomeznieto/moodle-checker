@@ -2,34 +2,41 @@
    RENDER SECTIONS
    ================================ */
 
+
 // Messages
 const renderMainSection = async (moodleData) => {
-    launchSpinner(true);
+    launchSpinner(true); //Iniciamos Spinner mientras se buscan nuevos mensajes
 
     const configData = await getConfig();
     const dataContent = document.getElementById('moodle-data');
     dataContent.innerHTML = "";
 
-    if (!moodleData.classRoom) {
-        dataContent.innerHTML = "Aún no hay datos guardados";
-        launchSpinner(false);
-        return;
-    }
-
     // No hay mensajes.
-    if(Object.values(moodleData["classRoom"]).length == 0){
+    const messages = await checkMessages(moodleData, configData);
+
+    // Enviamos los mensajes a chrome badge para que lance notificación
+    await chromeBadge(messages);
+
+    // Colocamos mensaje de que no hay mensajes para leer
+    if(messages.isEmpty){
         dataContent.innerHTML ="<div class='img-main'><img src='../assets/img/blank_space.png' /></div>" 
     }
+
 
     // Contenedor principal
     const mainContainer = document.createElement("div");
     mainContainer.id = "main-container";
     mainContainer.classList.add("main-container")
-    
 
-    for (const [classroomId, classRoom] of Object.entries(moodleData.classRoom)) {
+
+    for (const [classroomId, classRoom] of Object.entries(moodleData?.classRoom || {})) {
+        // Lsita de bloqueados del aula
         const blackList = configData.classRoom[classroomId].blackList;
-        if (!classRoom.forums) continue;
+
+        // Si no hay foros, seguimos
+        if (!classRoom.forums){
+            continue;
+        };
 
         // Creamos el contenedor del aula
         const divClassRoom = document.createElement("div");
@@ -48,7 +55,7 @@ const renderMainSection = async (moodleData) => {
         // Recorremos las aulas
         for (const [forumId, forum] of Object.entries(classRoom.forums || {})) {
             if(Object.keys(blackList).includes(forumId)){
-               continue; // No guardamos los foros que se encuentran en el blackList
+                continue; // No guardamos los foros que se encuentran en el blackList
             }
 
             const threadDiv = document.createElement("div");
@@ -84,7 +91,7 @@ const renderMainSection = async (moodleData) => {
 >
     <span>
         <span>${thread.name}</span>
-        <span class="${ thread.newMessages <= 0 ? 'hide' : 'badge bg-new-message'}">${thread.newMessages > 0 ? thread.newMessages : ''}</span>
+        <span class="${ thread.newMessages <= 0 ? 'hide' : 'badge-new-message bg-new-message'}">${thread.newMessages > 0 ? thread.newMessages : ''}</span>
         <i class="read-message nf nf-md-arrow_down_right"></i>
     </span>
     <span class="forum-actions">
@@ -196,6 +203,7 @@ const renderClassRoomSection = async (configData) => {
 
         <span 
             class="badge fc-delete" 
+            id="btn-delete-classroom"
             data-classroom="${classroomId}" 
         >
             <i class="nf nf-fa-trash"></i>
@@ -212,14 +220,23 @@ const renderClassRoomSection = async (configData) => {
 // Silent ClassRooms
 const renderSilentClassRoomSection = async (configData) => {
 
-    if (Object.values(configData?.classRoom).length == 0) {
+    const sectionDiv = document.getElementById("silent-classRooms-Data");
+    sectionDiv.innerHTML = '';
+    sectionDiv.classList.add("silent-container");
+
+    let isThereBlock = false;
+    for(const [classroomId, classroom] of Object.entries(configData.classRoom)){
+        if(Object.values(configData.classRoom[classroomId].blackList).length == 0){
+            console.log("No hay mensajes")
+            continue;
+        }
+        isThereBlock = true;
+    }
+
+    if (!isThereBlock) {
         sectionDiv.innerHTML = "<p>No hay foros bloqueados.</p>";
         return;
     }
-
-    const sectionDiv = document.getElementById("silent-classRooms-Data");
-    sectionDiv.classList.add("silent-container");
-    sectionDiv.innerHTML = '';
 
     for(const [classroomId, classroom] of Object.entries(configData.classRoom)){
 
@@ -235,6 +252,7 @@ const renderSilentClassRoomSection = async (configData) => {
         silentContainerClassroom.append(titleClassRoom);
 
         for(const [forumId, forumName] of Object.entries(configData.classRoom[classroomId].blackList)){
+
             const forumdiv = document.createElement("div");
             forumdiv.classList.add("silent-forum");
 
@@ -321,10 +339,10 @@ document.getElementById('form-classroom').addEventListener('submit', async e => 
         classRoom: {
             ...(configData.classRoom || {}),
             [code]: {
-                domainOptional: domainOptional || configData.classRoom[code].OprionalDomain || configData.domain || "Sin Dominio", 
+                domainOptional: domainOptional || configData.classRoom[code]?.domainOptional|| configData.domain || "Sin Dominio", 
                 name: name || configData.classRoom[code].name || "Sin Nombre",
                 section: section || configData.classRoom[code].section || 0,
-                blackList: configData.blackList || configData.classRoom[code].blackList || {} 
+                blackList: configData.blackList || configData.classRoom[code]?.blackList || {} 
             }
         }
     };
@@ -338,10 +356,12 @@ document.getElementById('form-classroom').addEventListener('submit', async e => 
     alertMessage.message = `El aula se ${mode == 'save' ? 'guardó' :  'editó'} correctamente`;
     launchAlert(alertMessage);
 
+    await checkNow(); 
+
 });
 
 // Settings 
-document.getElementById('form_setting').addEventListener('submit', async (e) => {
+document.getElementById('form-setting').addEventListener('submit', async (e) => {
     e.preventDefault();
 
     // Recuperamos datos de setting de LocalStorage
@@ -385,9 +405,10 @@ document.getElementById('form_setting').addEventListener('submit', async (e) => 
 
 });
 
+// Renderizamos el intervalo de minutos 
 const refreshIntervaleTIme = (newTime) => {
     const refreshTime = document.getElementById('intervaleTimeMinutes');
-    refreshTime.innerText = String(newTime);
+    refreshTime.innerText = `${ String(newTime)} ${newTime == 1 ? 'minuto' : 'minutos'}`
 }
 
 /* ============================================
@@ -441,6 +462,59 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 
 
 /* ======================================
+   MENSAJES 
+   ====================================== */
+
+const checkMessages = async (moodleData, configData) => {
+    let messagesUnread = 0;
+    let emptyMain = true;
+
+    for(const [classroomId, classroom] of Object.entries(moodleData?.classRoom || {})){
+        const blackList = configData.classRoom[classroomId].blackList;
+
+        for(const [forumId, forum] of Object.entries(classroom.forums) ) {
+            for(const [discussionId, discussion] of Object.entries(forum.discussions)){
+                if(Object.keys(blackList).includes(forumId)){
+                    continue;
+                }
+                emptyMain = isEmptyObject(discussion);
+                messagesUnread += Number(discussion.newMessages);
+            }
+        }
+    }
+
+    return {
+        isEmpty: emptyMain,
+        messagesUnread
+    }
+}
+
+const chromeBadge = async (messages) => {
+    let lastCount = await getLastCoutn();
+    const currentCount = messages.messagesUnread;
+
+    if(currentCount > 0){
+        chrome.action.setBadgeText({ text: String(lastCount) });
+        chrome.action.setBadgeBackgroundColor({ color: "#ed8796" });
+
+        // Lanzamos sonido
+        if(currentCount > lastCount){
+            playNotificationSound('assets/sounds/notify.mp3');
+        }
+
+    } else {
+        chrome.action.setBadgeText({ text: "" });
+    }
+
+    await saveLastCount(currentCount);
+}
+
+const playNotificationSound = (filePath) => {
+    const audio = new Audio(chrome.runtime.getURL(filePath));
+    audio.play().catch(error => console.error("Error al reproducir audio:", error));
+};
+
+/* ======================================
    CHROME API 
    ====================================== */
 
@@ -457,7 +531,7 @@ chrome.storage.local.get(["config"], async result => {
     const intervaleTimeMinutes = document.getElementById('intervaleTimeMinutes');
     const configData = result.config || {};
 
-    intervaleTimeMinutes.innerText = `${configData.checkInterval || '5'} ${result.config.checkInterval > 1 ? ' minutos' : 'minuto'}`;
+    refreshIntervaleTIme(configData.checkInterval || 5);
     const silenClassroom =  renderSilentClassRoomSection(configData);
     const classRooms = renderClassRoomSection(configData);
 
@@ -501,17 +575,13 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
 
 // Botones Sección Mensajes
 document.getElementById('moodle-data').addEventListener('click', async(e) => {
-    const btnDelete = e.target.closest('#btn-delete'); //TODO: especificar que es de discussion
-    const btnUpdate = e.target.closest('#btn-update'); 
+    const btnDelete = e.target.closest('#btn-delete');
     const unreaMessage = e.target.closest('#btn-read');
     const silentDiscussion = e.target.closest('#btn-silent');
 
     if (btnDelete) {
         const dataDiscussion = btnDelete.dataset;
         await deleteThreads(dataDiscussion)
-    } else if (btnUpdate){
-        const dataClassroom = btnUpdate.dataset;
-        await updateClassroom(dataClassroom);
     } else if(unreaMessage){
         const dataSummaryPost = unreaMessage.dataset;
         e.preventDefault()
@@ -525,15 +595,19 @@ document.getElementById('moodle-data').addEventListener('click', async(e) => {
 document.getElementById('classRooms-Data').addEventListener('click', async e => {
 
     const btnEditClassroom = e.target.closest('#btn-edit-classroom');
-
+    const btnDeleteClassroom = e.target.closest('#btn-delete-classroom')
     if(btnEditClassroom){
         const dataClassroom = btnEditClassroom.dataset;
         await editClassRoom(dataClassroom);
+    } else if(btnDeleteClassroom){
+        const dataClassroom = btnDeleteClassroom.dataset;
+        await deleteClassRoom(dataClassroom);
+
     }
 
 })
 
-//
+// Botones en Silent Class Rooms
 document.getElementById('silent-classRooms-Data').addEventListener('click', async e => {
 
     const btnunblockClassroom = e.target.closest('#btn-unblock');
@@ -542,6 +616,18 @@ document.getElementById('silent-classRooms-Data').addEventListener('click', asyn
         const dataUnblock = btnunblockClassroom.dataset;
         await unblockForum(dataUnblock);
     }
+})
+
+document.getElementById('main').addEventListener('click', e => {
+    const {form} = e.target.dataset; 
+    const regex = /form/i;
+
+    if(regex.test(form)){
+        e.preventDefault();
+        const formEl = document.getElementById(form);
+        formEl.reset();
+    }
+
 })
 
 // Unblock Forum
@@ -576,7 +662,6 @@ const editClassRoom = async (dataClassroom) => {
 
     document.getElementById('classRoomName').value = classroomName;
     document.getElementById('classRoomCode').value = classroomCode;
-    document.getElementById('classRoomCode').readOnly = true;
     document.getElementById('classRoomSection').value = classroomSection;
     document.getElementById('classRoomDomain').value = classroomDomain;
 
@@ -588,6 +673,35 @@ const editClassRoom = async (dataClassroom) => {
 
     // cambiamos el mode en Formlario de agregado a Edit
     document.getElementById('btn_classRoom').dataset.mode = 'edit';
+}
+
+// Delete Classroom
+const deleteClassRoom = async dataClassroom => {
+    launchSpinner(true);
+
+    let alertMessage = {
+        element: "alert-list-classroom",
+        error: false,
+        message: ""
+    };
+
+    const {classroom} = dataClassroom;
+
+    const configData = await getConfig();
+    const moodleData = await getMoodle();
+
+    delete configData.classRoom[classroom];
+    delete moodleData["classRoom"]?.[classroom]
+
+    await saveSettings(configData);
+    await saveMoodle(moodleData);
+
+    alertMessage.message = "El aula se ha borrado del listado";
+
+    launchAlert(alertMessage);
+    await renderClassRoomSection(configData);
+
+    launchSpinner(false);
 }
 
 // Delete Disussion
@@ -660,10 +774,14 @@ const silentForum = async (dataForum) => {
 
 // Check messages listener button
 document.getElementById('check-now-btn').addEventListener('click', async () => {
+    await checkNow();
+});
+
+const checkNow = async () => {
     launchSpinner(true)
     await chrome.runtime.sendMessage({ action: "check_now" });
     launchSpinner(false)
-});
+}
 
 
 /* ======================================
@@ -675,20 +793,31 @@ const saveMoodle = async (newMoodle) => {
     await chrome.storage.local.set({ moodle: newMoodle });
 }
 
-// Settings
-const saveSettings = async (newSetting) => {
-    await chrome.storage.local.set({ config: newSetting });
-}
-
 const getMoodle = async () => {
     const  {moodle: moodleData} = await chrome.storage.local.get("moodle") || {};
     return moodleData;
+}
+
+// Settings
+const saveSettings = async (newSetting) => {
+    await chrome.storage.local.set({ config: newSetting });
 }
 
 const getConfig = async () => {
     const  {config: configData} = await chrome.storage.local.get("config") || {};
     return configData;
 }
+
+// Last Count
+const saveLastCount = async (currentCount) =>{
+    await chrome.storage.local.set({ lastCount: currentCount });
+}
+
+const getLastCoutn = async () => {
+    const  {lastCount: lastCountData} = await chrome.storage.local.get("lastCount") || {};
+    return lastCountData;
+}
+
 
 
 /* ======================================

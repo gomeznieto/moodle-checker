@@ -8,15 +8,16 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
         const forumWithMessages = Array.from(forumLinks).map( link => {
             const url = new URL(link.href);
-            const container = link.closest('.activityname');
+            const container = link.closest('.activityname') || link.parentElement;
             const pill = container ? container.querySelector('.activitybadge') : null;
-            const match = pill.innerText.match(/\d+/); // Busca una secuencia de números
-            const newMessagesCount = match ? match[0] : "0";
 
             if(pill && pill.innerText.trim().length > 0){ // SI hay mensajes nuevos los guardamos en el array
+                const match = pill.innerText.match(/\d+/); // Busca una secuencia de números
+                const newMessagesCount = match ? match[0] : "0";
+
                 return {
                     id: url.searchParams.get('id'),
-                    url: url,
+                    url: link.href,
                     name: link.innerText.trim(),
                     newMessages: newMessagesCount
                 };
@@ -47,6 +48,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         }).filter(Boolean);
 
         sendResponse(forumWithMessages);
+
     } else if(message.target === 'offscreen_discussion_content'){ // Bucamos los mensajes
         const parser = new DOMParser();
         const doc = parser.parseFromString(message.data, 'text/html');

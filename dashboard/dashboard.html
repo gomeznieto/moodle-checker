@@ -32,7 +32,7 @@
                 <span class="nav-item">Ajustes</span>
             </div>
         </nav>
-        <main class="scrollable-content">
+        <main class="scrollable-content" id="main">
             <div id="loader" class="loader-container" style="display: none;">
                 <span class="loader"></span>
             </div>
@@ -48,6 +48,7 @@
             <section id="view-classRooms" class="tab-content" style="display: none;">
                 <div class="section-container">
                     <h1 class="title-section">Aulas</h1>
+                    <div id="alert-list-classroom" class="alert-container" style="display:none;"></div>
                     <div id="classRooms-Data" class="classRooms-container"></div>
                 </div>
             </section>
@@ -57,7 +58,7 @@
                     <h1 class="title-section">Configuración</h1>
                     <div id="alert-setting" class="alert-container" style="display:none;"></div>
                     <div class="form-container">
-                        <form class="form" id="form_setting">
+                        <form class="form" id="form-setting">
                             <div class="form-content">
                                 <label for="url">URL Base <span class="optional form-default-label">Default: https://frgp.cvg.utn.edu.ar</span></label>
                                 <input name="domain" id="url" placeholder="https://moodle.ejemplo.com" />
@@ -68,7 +69,13 @@
                                 <input name="timeInterval" id="interval" type="number" placeholder="15" />
                             </div>
 
-                            <button type="submit" class="btn bg-submit">Guardar</button>
+                            <div class="button-form-add-classroom">
+                                <button type="submit" class="btn bg-submit">Guardar</button>
+                                <div id="form-reset" data-form="form-setting" class="btn bg-delete">
+                                    Cancelar 
+                                </div>
+                            </div>
+
                         </form>
                     </div>
             </section>
@@ -99,12 +106,12 @@
                                 <input name="domain" id="classRoomDomain" placeholder="https://moodle.utn.edu.ar" />
                             </div>
                             <div class="button-form-add-classroom">
-                            <button type="submit" data-mode="save" id="btn_classRoom" class="btn bg-submit">
-                                Agregar
-                            </button>
-                            <div id="form_reset" class="btn bg-delete">
-                               Cancelar 
-                            </div>
+                                <button type="submit" data-mode="save" id="btn_classRoom" class="btn bg-submit">
+                                    Agregar
+                                </button>
+                                <div id="form-reset" data-form="form-classroom" class="btn bg-delete">
+                                    Cancelar 
+                                </div>
                             </div>
 
                         </form>
