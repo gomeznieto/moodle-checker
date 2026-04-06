@@ -239,6 +239,27 @@ chrome.runtime.onInstalled.addListener(async () => {
     await chrome.alarms.create("checkMoodle", { periodInMinutes: interval });
 });
 
+// MODIFICAMOS LA ALARMA
+chrome.storage.onChanged.addListener(async (changes, namespace) => {
+    if (namespace === 'local' && changes.config) {
+
+        const configData = await getConfig();
+        const alarm = await chrome.alarms.get('checkMoodle');
+
+        const currentPeriodInMinutes = parseInt(configData.checkInterval);
+
+        if (!alarm || alarm.periodInMinutes !== currentPeriodInMinutes) {
+
+            await chrome.alarms.clear("checkMoodle");
+
+            chrome.alarms.create("checkMoodle", { 
+                periodInMinutes: currentPeriodInMinutes,
+                delayInMinutes: 1 
+            });
+        }
+    }
+});
+
 // ALARMA
 chrome.alarms.onAlarm.addListener(async (alarm) => {
     if(alarm.name == "checkMoodle"){
@@ -255,7 +276,7 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
                 await processMoodle(code, name, section, url);
             }
         } catch (errorObj) {
-            console.log(error)
+            console.log(errorObj)
             // launchAlert({ element:"alert-container", error: true, message: "Ocurrió un error mientra se intentaba actualizar la información."})
         }
     }

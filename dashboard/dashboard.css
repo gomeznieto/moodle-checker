@@ -300,6 +300,7 @@ ALERT
     border-radius: 3px;
     margin-bottom: 1rem;
     font-size: 0.9rem;
+    z-index: 10;
 }
 
 .alert-success {

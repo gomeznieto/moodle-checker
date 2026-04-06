@@ -840,4 +840,13 @@ const isInvalid = (value) => {
 const launchSpinner = (turn) => {
     const container = document.getElementById('loader');
     turn ? container.style.display = 'block' : container.style.display = 'none';
+
+    // Badge de extensión para mostrar que se están realizando tareas de backgound
+    if(turn){
+        chrome.action.setBadgeText({ text: "..." });
+        chrome.action.setBadgeTextColor({ color: "#1e1e2e" });
+        chrome.action.setBadgeBackgroundColor({ color: "#e5c890" });
+    } else {
+        chrome.action.setBadgeText({text: ""})
+    }
 }
