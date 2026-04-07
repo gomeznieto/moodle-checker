@@ -108,15 +108,15 @@ const processThread = async (data, url) => {
                     currentForum.discussions = {};
                 }
 
-                const discussionExist = currentForum.discussions[discussion.id];
+                const discussionExist = currentForum.discussions[thread.id];
 
                 if (discussionExist) { // Si el "Hilo" existe, lo actualizamos
                     const previo = parseInt(discussionExist.newMessages) || 0;
                     const nuevo = parseInt(thread.newMessages) || 0;
-                    moodleData.classRoom[data.classRoomId].forums[data.forumId].discussions[discussion.id].newMessages = previo + nuevo;
+                    moodleData.classRoom[data.classRoomId].forums[data.forumId].discussions[thread.id].newMessages = previo + nuevo;
                 } else { // Si no exite, lo creamos
                     thread.newMessages = parseInt(thread.newMessages) || 0;
-                    moodleData.classRoom[data.classRoomId].forums[data.forumId].discussions[discussion.id] = thread;
+                    moodleData.classRoom[data.classRoomId].forums[data.forumId].discussions[thread.id] = thread;
                 }
 
                 // GUardamos la información en el LocalStorage

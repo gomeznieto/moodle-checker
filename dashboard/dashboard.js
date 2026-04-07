@@ -467,14 +467,16 @@ const checkMessages = async (moodleData, configData) => {
     let messagesUnread = 0;
     let emptyMain = true;
 
-    for(const [classroomId, classroom] of Object.entries(moodleData?.classRoom || {})){
+    for(const [classroomId, classroom] of Object.entries(moodleData.classRoom || {})){
         const blackList = configData.classRoom[classroomId].blackList;
 
         for(const [forumId, forum] of Object.entries(classroom.forums) ) {
-            for(const [discussionId, discussion] of Object.entries(forum.discussions)){
+
+            for(const [discussionId, discussion] of Object.entries(forum.discussions || {})){
                 if(Object.keys(blackList).includes(forumId)){
                     continue;
                 }
+                console.log("Nuevo mensaje") 
                 emptyMain = isEmptyObject(discussion);
                 messagesUnread += Number(discussion.newMessages);
             }
@@ -488,7 +490,7 @@ const checkMessages = async (moodleData, configData) => {
 }
 
 const chromeBadge = async (messages) => {
-    let lastCount = await getLastCoutn();
+    let lastCount = await getLastCount();
     const currentCount = messages.messagesUnread;
 
     if(currentCount > 0){
@@ -815,7 +817,7 @@ const saveLastCount = async (currentCount) =>{
     await chrome.storage.local.set({ lastCount: currentCount });
 }
 
-const getLastCoutn = async () => {
+const getLastCount = async () => {
     const  {lastCount: lastCountData} = await chrome.storage.local.get("lastCount") || {};
     return lastCountData;
 }
@@ -842,13 +844,4 @@ const isInvalid = (value) => {
 const launchSpinner = (turn) => {
     const container = document.getElementById('loader');
     turn ? container.style.display = 'block' : container.style.display = 'none';
-
-    // Badge de extensión para mostrar que se están realizando tareas de backgound
-    if(turn){
-        chrome.action.setBadgeText({ text: "..." });
-        chrome.action.setBadgeTextColor({ color: "#1e1e2e" });
-        chrome.action.setBadgeBackgroundColor({ color: "#e5c890" });
-    } else {
-        chrome.action.setBadgeText({text: ""})
-    }
 }
