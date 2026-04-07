@@ -22,8 +22,7 @@ const processMoodle = async (id, name, section, url) => {
         }
 
         // Solo leemos si hay cambios en el fetch de datos
-        // if(currentLentgth != lastSize){
-        if(true){
+        if(currentLentgth != lastSize){
             if (!moodleData) moodleData = {};
             if (!moodleData.classRoom) moodleData.classRoom = {}; // Si no hay aulas guardadas, se crea vacío
             if (!moodleData.classRoom[id]) moodleData.classRoom[id] = { forums: {}, name: name, section: section }; // Si el aula a leer no tiene datos guardados, se crea vacío
@@ -35,14 +34,15 @@ const processMoodle = async (id, name, section, url) => {
             // Si hay nuevos mensajes
             if (html.includes("rounded-pill") || html.includes("unread")) {
 
-                const results = await parserOffscreen({target: 'offscreen_forum', data: html}) || []; // Se parsea los datos en offscreen con métodos DOM
+                const forums = await parserOffscreen({target: 'offscreen_forum', data: html}) || []; // Se parsea los datos en offscreen con métodos DOM
 
                 // Recorremos los foros con mensajes nuevos
-                for (const forum of results){
+                // for (const forum of results){
+                const promisesForum = forums.map( async (forum) => {
 
                     // Verificamos si el id está en la black list
                     if(Object.values(currenConfig.classRoom[id].blackList).includes(forum.id)){
-                        continue;
+                        return;
                     }
 
                     // Guardamos los foros del aula en el local storage
@@ -69,23 +69,23 @@ const processMoodle = async (id, name, section, url) => {
                     }
 
                     // Provcesamos los "Hilos del foro"
-                    await processMoodleForum(data, `${forum.url}`);
+                    await processThread(data, `${forum.url}`);
 
                     // Volvemos a cargar los datos que se hayan guardado de los procesos de los cuales volvemos
                     const refreshed = await chrome.storage.local.get(["moodle"]);
                     moodleData = refreshed.moodle || moodleData;
-                }
-            }
+                });
+
+                await Promise.all(promisesForum); }
         }
 
     } catch (error) {
         console.log(error)
-        // launchAlert({ element:"alert-container", error: true, message: "Ocurrió un error mientra se intentaba actualizar la información."})
     }
 }
 
 // Ingresa a cada Foro del aula y traermos los hilos
-const processMoodleForum = async (data, url) => {
+const processThread = async (data, url) => {
     try {
 
         // Traemos los datos del Foro que tiene mensajes nuevos
@@ -97,9 +97,10 @@ const processMoodleForum = async (data, url) => {
 
         // Si hay "Hilos con mensajes nuevos, los vamos a recorrer para buscar los mensajes"
         if (html.includes("rounded-pill") || html.includes("unread")) {
-            const results = await parserOffscreen({target: 'offscreen_discussion', data: html});
+            const threads = await parserOffscreen({target: 'offscreen_discussion', data: html});
 
-            for(const discussion of results){
+            // for(const discussion of threads){
+            const promisesThread = threads.map(async (thread) => {
 
                 const currentForum = moodleData.classRoom[data.classRoomId].forums[data.forumId]; // Buscamos los "Hilos" del foro
 
@@ -110,12 +111,12 @@ const processMoodleForum = async (data, url) => {
                 const discussionExist = currentForum.discussions[discussion.id];
 
                 if (discussionExist) { // Si el "Hilo" existe, lo actualizamos
-                    const previo = Number(discussionExist.newMessages) || 0;
-                    const nuevo = Number(discussion.newMessages) || 0;
+                    const previo = parseInt(discussionExist.newMessages) || 0;
+                    const nuevo = parseInt(thread.newMessages) || 0;
                     moodleData.classRoom[data.classRoomId].forums[data.forumId].discussions[discussion.id].newMessages = previo + nuevo;
                 } else { // Si no exite, lo creamos
-                    discussion.newMessages = Number(discussion.newMessages) || 0;
-                    moodleData.classRoom[data.classRoomId].forums[data.forumId].discussions[discussion.id] = discussion;
+                    thread.newMessages = parseInt(thread.newMessages) || 0;
+                    moodleData.classRoom[data.classRoomId].forums[data.forumId].discussions[discussion.id] = thread;
                 }
 
                 // GUardamos la información en el LocalStorage
@@ -124,27 +125,27 @@ const processMoodleForum = async (data, url) => {
                 // Pasamos a las discusiones el Aula y foro al que pertenece
                 const nextData = {
                     ...data,
-                    discussionId: discussion.id
+                    discussionId: thread.id
                 };
 
                 // Ingresamos a los post de la discusión
-                await processMoodleDiscussion(nextData, discussion.url);
+                await processDiscussion(nextData, thread.url);
 
                 // Refrescamos los datos
                 const refreshed = await chrome.storage.local.get(["moodle"]);
                 moodleData = refreshed.moodle || moodleData;
-            }
+            })
 
+            await Promise.all(promisesThread);
         }
 
     } catch (error) {
         console.log(error)
-        // launchAlert({error: true, message: "Ocurrió un error mientra se intentaba actualizar la información."})
     }
 }
 
 // Traemos los posts y los guardamos en local storage
-const processMoodleDiscussion = async (data, url) => {
+const processDiscussion = async (data, url) => {
     try {
         const response = await fetch(url);
         const html = await response.text();
@@ -172,7 +173,6 @@ const processMoodleDiscussion = async (data, url) => {
 
     } catch (error) {
         console.log(error)
-        // launchAlert({error: true, message: "Ocurrió un error mientra se intentaba actualizar la información."})
     }
 }
 
@@ -219,7 +219,7 @@ const launchAlert = async (error) => {
 
 // INSTALAMOS LA ALARMA
 chrome.runtime.onInstalled.addListener(async () => {
-    const { config } = await chrome.storage.local.get(["config"]);
+    let { config } = await chrome.storage.local.get(["config"]);
 
     const timeDefault = 30;
     const urlBaseDefault = "https://frgp.cvg.utn.edu.ar";
@@ -232,18 +232,23 @@ chrome.runtime.onInstalled.addListener(async () => {
     };
 
     if (!config) { // Si aún no hay configuración, guardamos datos por default
+        config = defaultConfig;
         await chrome.storage.local.set({ config: defaultConfig });
     }
 
-    const interval = config?.checkInterval || defaultConfig.checkInterval;
-    await chrome.alarms.create("checkMoodle", { periodInMinutes: interval });
+    const interval = parseInt(config?.checkInterval) || timeDefault;
+
+    await chrome.alarms.create("checkMoodle", { 
+        periodInMinutes: interval,
+        delayInMinutes: 1 
+    });
 });
 
 // MODIFICAMOS LA ALARMA
 chrome.storage.onChanged.addListener(async (changes, namespace) => {
     if (namespace === 'local' && changes.config) {
 
-        const configData = await getConfig();
+        let { config: configData } = await chrome.storage.local.get(["config"]);
         const alarm = await chrome.alarms.get('checkMoodle');
 
         const currentPeriodInMinutes = parseInt(configData.checkInterval);
@@ -265,19 +270,16 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
     if(alarm.name == "checkMoodle"){
         try {
             const { config } = await chrome.storage.local.get(["config"]);
+            const classrooms = Object.entries(config.classRoom || {})
 
-            for (const [code, classroomData] of Object.entries(config.classRoom || {})) {
-                const name = classroomData.name;
-                const section = classroomData.section;
-                const domain = classroomData.domainOptional;
-                const url = `${domain}/course/view.php?id=${code}&section=${section}#tabs-tree-start`
+            const promises = classrooms.map(([code, data]) => {
+                const url = `${data.domainOptional}/course/view.php?id=${code}&section=${data.section}#tabs-tree-start`
+                return processMoodle(code, data.name, data.section, url);
+            })
 
-                // Iniciamos fetch
-                await processMoodle(code, name, section, url);
-            }
+            await Promise.all(promises);
         } catch (errorObj) {
             console.log(errorObj)
-            // launchAlert({ element:"alert-container", error: true, message: "Ocurrió un error mientra se intentaba actualizar la información."})
         }
     }
 })

@@ -170,12 +170,13 @@ const renderMainSection = async (moodleData) => {
 // ClassRooms
 const renderClassRoomSection = async (configData) => {
 
+    const sectionDiv = document.getElementById("classRooms-Data"); 
+
     if (Object.values(configData?.classRoom).length == 0) {
         sectionDiv.innerHTML = "<p>No hay aulas guardas.</p>";
         return;
     }
 
-    const sectionDiv = document.getElementById("classRooms-Data"); 
     sectionDiv.innerHTML = '';
 
     for(const [classroomId, classroom] of Object.entries(configData?.classRoom)){
@@ -219,7 +220,6 @@ const renderClassRoomSection = async (configData) => {
 
 // Silent ClassRooms
 const renderSilentClassRoomSection = async (configData) => {
-
     const sectionDiv = document.getElementById("silent-classRooms-Data");
     sectionDiv.innerHTML = '';
     sectionDiv.classList.add("silent-container");
@@ -227,9 +227,9 @@ const renderSilentClassRoomSection = async (configData) => {
     let isThereBlock = false;
     for(const [classroomId, classroom] of Object.entries(configData.classRoom)){
         if(Object.values(configData.classRoom[classroomId].blackList).length == 0){
-            console.log("No hay mensajes")
             continue;
         }
+
         isThereBlock = true;
     }
 
@@ -279,9 +279,7 @@ const renderSilentClassRoomSection = async (configData) => {
 
         sectionDiv.append(silentContainerClassroom);
     }
-
 }
-
 
 /* ========================================
    FORMS 
@@ -521,6 +519,9 @@ const playNotificationSound = (filePath) => {
 // INIT MAIN SECTION
 chrome.storage.local.get(["moodle"], async (result) => {
     const moodleData = result.moodle || {};
+    
+    if(isEmptyObject(moodleData)) return;
+
     const mainSection = renderMainSection(moodleData);
 
     Promise.all([mainSection]);
@@ -528,8 +529,9 @@ chrome.storage.local.get(["moodle"], async (result) => {
 
 // INIT SETTING SECTION
 chrome.storage.local.get(["config"], async result => {
-    const intervaleTimeMinutes = document.getElementById('intervaleTimeMinutes');
     const configData = result.config || {};
+
+    if(isEmptyObject(configData)) return;
 
     refreshIntervaleTIme(configData.checkInterval || 5);
     const silenClassroom =  renderSilentClassRoomSection(configData);
