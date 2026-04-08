@@ -417,6 +417,7 @@ const launchAlert = ({element, error, message}) => {
     const alert = document.getElementById(element);
     alert.classList.remove("alert-success", "alert-error");
     let messageDisplay = '';
+
     if(!error){
         alert.classList.add("alert-success");
         messageDisplay = `<div class="message-container">
@@ -424,7 +425,6 @@ const launchAlert = ({element, error, message}) => {
 <span>${message}</span>
 </div>
 `
-
     } else {
         alert.classList.add("alert-error");
         messageDisplay = `
@@ -606,7 +606,6 @@ document.getElementById('classRooms-Data').addEventListener('click', async e => 
     } else if(btnDeleteClassroom){
         const dataClassroom = btnDeleteClassroom.dataset;
         await deleteClassRoom(dataClassroom);
-
     }
 
 })
@@ -631,7 +630,6 @@ document.getElementById('main').addEventListener('click', e => {
         const formEl = document.getElementById(form);
         formEl.reset();
     }
-
 })
 
 // Unblock Forum
@@ -648,7 +646,6 @@ const unblockForum = async dataUnblock => {
         await saveSettings(configData);
         await renderMainSection(moodleData);
     }
-
 }
 
 // Edit ClassRoom

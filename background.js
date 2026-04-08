@@ -93,7 +93,7 @@ const processThread = async (data, url) => {
         const html = await response.text();
 
         // Traemos los datos del Local Storage
-        const {moodle:moodleData} = await chrome.storage.local.get(["moodle"]) || {};
+        let {moodle:moodleData} = await chrome.storage.local.get(["moodle"]) || {};
 
         // Si hay "Hilos con mensajes nuevos, los vamos a recorrer para buscar los mensajes"
         if (html.includes("rounded-pill") || html.includes("unread")) {
@@ -217,17 +217,21 @@ const launchAlert = async (error) => {
    LISTENERS
    =================================== */
 
+const alarm = {
+    timeDefault: 30,
+    name: "checkMoodle"
+}
+
 // INSTALAMOS LA ALARMA
 chrome.runtime.onInstalled.addListener(async () => {
     let { config } = await chrome.storage.local.get(["config"]);
 
-    const timeDefault = 30;
     const urlBaseDefault = "https://frgp.cvg.utn.edu.ar";
 
     // Datos default
     const defaultConfig = {
         domain: urlBaseDefault,
-        checkInterval: timeDefault,
+        checkInterval: alarm.timeDefault,
         classRoom: {}
     };
 
@@ -236,9 +240,9 @@ chrome.runtime.onInstalled.addListener(async () => {
         await chrome.storage.local.set({ config: defaultConfig });
     }
 
-    const interval = parseInt(config?.checkInterval) || timeDefault;
+    const interval = parseInt(config?.checkInterval) || alarm.timeDefault;
 
-    await chrome.alarms.create("checkMoodle", { 
+    await chrome.alarms.create(alarm.name, { 
         periodInMinutes: interval,
         delayInMinutes: 1 
     });
@@ -249,15 +253,13 @@ chrome.storage.onChanged.addListener(async (changes, namespace) => {
     if (namespace === 'local' && changes.config) {
 
         let { config: configData } = await chrome.storage.local.get(["config"]);
-        const alarm = await chrome.alarms.get('checkMoodle');
+        const alarm = await chrome.alarms.get(alarm.name);
 
         const currentPeriodInMinutes = parseInt(configData.checkInterval);
 
         if (!alarm || alarm.periodInMinutes !== currentPeriodInMinutes) {
-
-            await chrome.alarms.clear("checkMoodle");
-
-            chrome.alarms.create("checkMoodle", { 
+            await chrome.alarms.clear(alarm.name);
+            chrome.alarms.create(alarm.name, { 
                 periodInMinutes: currentPeriodInMinutes,
                 delayInMinutes: 1 
             });
@@ -267,7 +269,7 @@ chrome.storage.onChanged.addListener(async (changes, namespace) => {
 
 // ALARMA
 chrome.alarms.onAlarm.addListener(async (alarm) => {
-    if(alarm.name == "checkMoodle"){
+    if(alarm.name == alarm.name){
         try {
             const { config } = await chrome.storage.local.get(["config"]);
             const classrooms = Object.entries(config.classRoom || {})
@@ -278,8 +280,8 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
             })
 
             await Promise.all(promises);
-        } catch (errorObj) {
-            console.log(errorObj)
+        } catch (error) {
+            console.log(error)
         }
     }
 })
