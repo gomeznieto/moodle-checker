@@ -569,7 +569,11 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
     }
 
     if (message.target === 'catchError') {
-        launchAlert(message.datos);
+        launchAlert({
+            element: "alert-main",
+            error: true,
+            message: message.datos
+        });
     }
 })
 

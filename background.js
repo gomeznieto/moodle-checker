@@ -217,7 +217,7 @@ const launchAlert = async (error) => {
    LISTENERS
    =================================== */
 
-const alarm = {
+const alarmConfig = {
     timeDefault: 30,
     name: "checkMoodle"
 }
@@ -228,10 +228,10 @@ chrome.runtime.onInstalled.addListener(async () => {
 
     const urlBaseDefault = "https://frgp.cvg.utn.edu.ar";
 
-    // Datos default
+    //Datos default
     const defaultConfig = {
         domain: urlBaseDefault,
-        checkInterval: alarm.timeDefault,
+        checkInterval: alarmConfig.timeDefault,
         classRoom: {}
     };
 
@@ -240,9 +240,9 @@ chrome.runtime.onInstalled.addListener(async () => {
         await chrome.storage.local.set({ config: defaultConfig });
     }
 
-    const interval = parseInt(config?.checkInterval) || alarm.timeDefault;
+    const interval = parseInt(config?.checkInterval) || alarmConfig.timeDefault;
 
-    await chrome.alarms.create(alarm.name, { 
+    await chrome.alarms.create(alarmConfig.name, { 
         periodInMinutes: interval,
         delayInMinutes: 1 
     });
@@ -253,13 +253,13 @@ chrome.storage.onChanged.addListener(async (changes, namespace) => {
     if (namespace === 'local' && changes.config) {
 
         let { config: configData } = await chrome.storage.local.get(["config"]);
-        const alarm = await chrome.alarms.get(alarm.name);
+        const alarm = await chrome.alarms.get(alarmConfig.name);
 
         const currentPeriodInMinutes = parseInt(configData.checkInterval);
 
         if (!alarm || alarm.periodInMinutes !== currentPeriodInMinutes) {
-            await chrome.alarms.clear(alarm.name);
-            chrome.alarms.create(alarm.name, { 
+            await chrome.alarms.clear(alarmConfig.name);
+            chrome.alarms.create(alarmConfig.name, { 
                 periodInMinutes: currentPeriodInMinutes,
                 delayInMinutes: 1 
             });
